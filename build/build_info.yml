@@ -1,0 +1,61 @@
+cmake:
+  application:
+    configuration-dir: '/home/viktor/zephyr-standalone/zephyrproject/haptic'
+    source-dir: '/home/viktor/zephyr-standalone/zephyrproject/haptic'
+  board:
+    name: 'blackpill_f411ce'
+    path:
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/boards/weact/blackpill_f411ce'
+    qualifiers: 'stm32f411xe'
+    revision: ''
+  devicetree:
+    bindings-dirs:
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/bindings'
+    files:
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/haptic/app.overlay'
+    include-dirs:
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/ambiq/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/atmel/include'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/bouffalolab/include'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/bouffalolab/include/zephyr'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/gigadevice/include'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/microchip/include'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/microchip/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/nuvoton/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/nxp/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/stm32/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/modules/hal/ti/dts'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/include'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/include/zephyr'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/common'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/vendor'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/rx'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/x86'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/xtensa'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/sparc'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/riscv'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/posix'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/arm64'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/arm'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts/arc'
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/dts'
+    user-files:
+     - '/home/viktor/zephyr-standalone/zephyrproject/haptic/app.overlay'
+  kconfig:
+    files:
+     - '/home/viktor/zephyr-standalone/zephyrproject/zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce_defconfig'
+     - '/home/viktor/zephyr-standalone/zephyrproject/haptic/prj.conf'
+    user-files:
+     - '/home/viktor/zephyr-standalone/zephyrproject/haptic/prj.conf'
+  toolchain:
+    name: 'zephyr'
+    path: '/home/viktor/zephyr-standalone/zephyr-sdk-0.16.8'
+  zephyr:
+    version: '4.3.99'
+    zephyr-base: '/home/viktor/zephyr-standalone/zephyrproject/zephyr'
+version: '0.1.0'
+west:
+  command: '/home/viktor/.local/bin/west build -b blackpill_f411ce -p always'
+  topdir: '/home/viktor/zephyr-standalone/zephyrproject'
+  version: '1.5.0'

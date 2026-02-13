@@ -1,0 +1,41 @@
+# Available runners configured by board.cmake.
+runners:
+- dfu-util
+- openocd
+- jlink
+- blackmagicprobe
+
+# Default flash runner if --runner is not given.
+flash-runner: dfu-util
+
+# Default debug runner if --runner is not given.
+debug-runner: openocd
+
+# Common runner configuration values.
+config:
+  board_dir: /home/viktor/zephyr-standalone/zephyrproject/zephyr/boards/weact/blackpill_f411ce
+  # Build outputs:
+  elf_file: zephyr.elf
+  hex_file: zephyr.hex
+  bin_file: zephyr.bin
+  # Host tools:
+  gdb: /home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gdb
+
+# Runner specific arguments
+args:
+  dfu-util:
+    - --pid=0483:df11
+    - --alt=0
+    - --dfuse
+  openocd:
+    - --cmd-load
+    - flash write_image erase
+    - --cmd-verify
+    - verify_image
+  jlink:
+    - --dt-flash=y
+    - --device=STM32F411CE
+    - --speed=4000
+  blackmagicprobe:
+    []
+

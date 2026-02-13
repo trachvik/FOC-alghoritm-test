@@ -1,0 +1,29 @@
+# Zephyr Build Commands for Blackpill STM32F411CE
+
+## Build (after initial board configuration)
+west build
+
+## Pristine Build (clean build from scratch)
+west build -p always
+
+## Flash (using OpenOCD/ST-Link)
+west flash
+
+## Initial Build with Board Specified
+west build -b blackpill_f411ce
+
+## Pristine Build with Board Specified
+west build -b blackpill_f411ce -p always
+
+## Clean Build Directory
+west build -t clean
+
+## Alternative Flash Methods
+# Using st-flash directly:
+# st-flash write build/zephyr/zephyr.bin 0x8000000
+
+# Using OpenOCD directly:
+# openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c "program build/zephyr/zephyr.elf verify reset exit"
+
+#Serial monitor:
+sudo cat /dev/ttyACM0

@@ -1,0 +1,64 @@
+/ {
+	/* Toto propojí výpisy printk s USB portem */
+	chosen {
+		zephyr,console = &cdc_acm_uart0;
+	};
+
+	/* Definice LED na desce pro kontrolu */
+	leds {
+		compatible = "gpio-leds";
+		blue_led: led_0 {
+			gpios = <&gpioc 13 GPIO_ACTIVE_LOW>;
+		};
+	};
+
+	aliases {
+		led0 = &blue_led;
+	};
+};
+
+/* Aktivace USB CDC ACM (virtuální sériový port) */
+&zephyr_udc0 {
+	status = "okay";
+	cdc_acm_uart0: cdc_acm_uart0 {
+		compatible = "zephyr,cdc-acm-uart";
+	};
+};
+
+/* SPI1 pro senzor AS5048A */
+&spi1 {
+	status = "okay";
+	pinctrl-0 = <&spi1_sck_pa5 &spi1_miso_pb4 &spi1_mosi_pb5>;
+	pinctrl-names = "default";
+	cs-gpios = <&gpioa 4 GPIO_ACTIVE_LOW>;
+
+	as5048a: as5048a@0 {
+		compatible = "vnd,spi-device";
+		reg = <0>;
+		spi-max-frequency = <1000000>;
+	};
+};
+
+/* PWM pro řízení BLDC motoru přes TMC6300 */
+/* TMC6300 potřebuje 6 nezávislých PWM signálů (UH, UL, VH, VL, WH, WL) */
+/* TIM1 pro všechny Low side, TIM3 pro všechny High side */
+
+/* TIM1: UL (CH1/PA8), VL (CH2/PA9), WL (CH3/PA10) */
+&timers1 {
+	status = "okay";
+	pwm_low: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim1_ch1_pa8 &tim1_ch2_pa9 &tim1_ch3_pa10>;
+		pinctrl-names = "default";
+	};
+};
+
+/* TIM3: UH (CH2/PA7), VH (CH3/PB0), WH (CH4/PB1) */
+&timers3 {
+	status = "okay";
+	pwm_high: pwm {
+		status = "okay";
+		pinctrl-0 = <&tim3_ch2_pa7 &tim3_ch3_pb0 &tim3_ch4_pb1>;
+		pinctrl-names = "default";
+	};
+};
