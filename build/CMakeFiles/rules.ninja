@@ -81,7 +81,7 @@ rule C_COMPILER__zephyr_pre0_unscanned_
 # Rule for linking C executable.
 
 rule C_EXECUTABLE_LINKER__zephyr_pre0_
-  command = $PRE_LINK && ccache /home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES -L"/home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/12.2.0/thumb/v7e-m/nofp" -lc -lgcc && $POST_BUILD
+  command = $PRE_LINK && ccache /home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES -L"/home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/12.2.0/thumb/v7e-m+fp/hard" -lc -lgcc && $POST_BUILD
   description = Linking C executable $TARGET_FILE
   restat = $RESTAT
 
@@ -100,7 +100,7 @@ rule C_COMPILER__zephyr_final_unscanned_
 # Rule for linking C executable.
 
 rule C_EXECUTABLE_LINKER__zephyr_final_
-  command = $PRE_LINK && ccache /home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES -L"/home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/12.2.0/thumb/v7e-m/nofp" -lc -lgcc && $POST_BUILD
+  command = $PRE_LINK && ccache /home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc $FLAGS $LINK_FLAGS $in -o $TARGET_FILE $LINK_PATH $LINK_LIBRARIES -L"/home/viktor/zephyr-standalone/zephyr-sdk-0.16.8/arm-zephyr-eabi/bin/../lib/gcc/arm-zephyr-eabi/12.2.0/thumb/v7e-m+fp/hard" -lc -lgcc && $POST_BUILD
   description = Linking C executable $TARGET_FILE
   restat = $RESTAT
 

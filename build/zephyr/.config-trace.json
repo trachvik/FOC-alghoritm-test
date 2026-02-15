@@ -465,11 +465,22 @@
     "CONFIG_FPU",
     "y",
     "bool",
-    "n",
+    "y",
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
       49
+    ]
+  ],
+  [
+    "CONFIG_LIBLC3",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      50
     ]
   ],
   [
@@ -480,7 +491,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      50
+      51
     ]
   ],
   [
@@ -491,7 +502,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      51
+      52
     ]
   ],
   [
@@ -502,7 +513,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      52
+      53
     ]
   ],
   [
@@ -513,7 +524,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      53
+      54
     ]
   ],
   [
@@ -524,7 +535,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      54
+      55
     ]
   ],
   [
@@ -545,7 +556,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      56
+      57
     ]
   ],
   [
@@ -556,7 +567,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      57
+      58
     ]
   ],
   [
@@ -567,7 +578,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      58
+      59
     ]
   ],
   [
@@ -589,7 +600,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      60
+      61
     ]
   ],
   [
@@ -600,7 +611,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      61
+      62
     ]
   ],
   [
@@ -611,7 +622,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      62
+      63
     ]
   ],
   [
@@ -622,7 +633,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      63
+      64
     ]
   ],
   [
@@ -633,7 +644,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      64
+      65
     ]
   ],
   [
@@ -644,7 +655,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      65
+      66
     ]
   ],
   [
@@ -655,7 +666,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      66
+      67
     ]
   ],
   [
@@ -666,7 +677,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      67
+      68
     ]
   ],
   [
@@ -677,7 +688,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      68
+      69
     ]
   ],
   [
@@ -688,7 +699,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      69
+      70
     ]
   ],
   [
@@ -699,7 +710,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      70
+      71
     ]
   ],
   [
@@ -710,7 +721,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      71
+      72
     ]
   ],
   [
@@ -721,7 +732,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      72
+      73
     ]
   ],
   [
@@ -742,7 +753,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      74
+      75
     ]
   ],
   [
@@ -753,7 +764,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      75
+      76
     ]
   ],
   [
@@ -764,7 +775,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      76
+      77
     ]
   ],
   [
@@ -785,7 +796,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      78
+      79
     ]
   ],
   [
@@ -796,7 +807,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      79
+      80
     ]
   ],
   [
@@ -829,7 +840,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      82
+      83
     ]
   ],
   [
@@ -840,7 +851,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      83
+      84
     ]
   ],
   [
@@ -851,7 +862,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      84
+      85
     ]
   ],
   [
@@ -862,7 +873,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      85
+      86
     ]
   ],
   [
@@ -873,7 +884,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      86
+      87
     ]
   ],
   [
@@ -884,7 +895,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      87
+      88
     ]
   ],
   [
@@ -895,7 +906,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      88
+      89
     ]
   ],
   [
@@ -906,7 +917,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      89
+      90
     ]
   ],
   [
@@ -917,7 +928,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      90
+      91
     ]
   ],
   [
@@ -928,7 +939,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      91
+      92
     ]
   ],
   [
@@ -939,7 +950,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      92
+      93
     ]
   ],
   [
@@ -960,7 +971,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      94
+      95
     ]
   ],
   [
@@ -971,7 +982,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      95
+      96
     ]
   ],
   [
@@ -982,7 +993,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      96
+      97
     ]
   ],
   [
@@ -993,7 +1004,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      97
+      98
     ]
   ],
   [
@@ -1004,7 +1015,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      98
+      99
     ]
   ],
   [
@@ -1015,7 +1026,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      99
+      100
     ]
   ],
   [
@@ -1026,7 +1037,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      100
+      101
     ]
   ],
   [
@@ -1037,7 +1048,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      101
+      102
     ]
   ],
   [
@@ -1048,7 +1059,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      102
+      103
     ]
   ],
   [
@@ -1059,7 +1070,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      103
+      104
     ]
   ],
   [
@@ -1070,7 +1081,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      104
+      105
     ]
   ],
   [
@@ -1081,7 +1092,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      105
+      106
     ]
   ],
   [
@@ -1092,7 +1103,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      106
+      107
     ]
   ],
   [
@@ -1103,7 +1114,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      107
+      108
     ]
   ],
   [
@@ -1114,7 +1125,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      108
+      109
     ]
   ],
   [
@@ -1125,7 +1136,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      109
+      110
     ]
   ],
   [
@@ -1136,18 +1147,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      110
+      111
     ]
   ],
   [
     "CONFIG_LOG",
     "y",
     "bool",
-    "n",
+    "y",
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      111
+      112
     ]
   ],
   [
@@ -1158,7 +1169,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      112
+      113
     ]
   ],
   [
@@ -1180,7 +1191,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      114
+      115
+    ]
+  ],
+  [
+    "CONFIG_LOG_DOMAIN_NAME",
+    "y",
+    "string",
+    "",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      116
     ]
   ],
   [
@@ -1191,7 +1213,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      115
+      117
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_THREAD_STACK_SIZE",
+    "y",
+    "int",
+    "768",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      118
     ]
   ],
   [
@@ -1202,7 +1235,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      116
+      119
     ]
   ],
   [
@@ -1213,7 +1246,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      117
+      120
     ]
   ],
   [
@@ -1224,7 +1257,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      118
+      121
     ]
   ],
   [
@@ -1245,7 +1278,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      120
+      123
     ]
   ],
   [
@@ -1256,7 +1289,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      121
+      124
     ]
   ],
   [
@@ -1267,7 +1300,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      122
+      125
     ]
   ],
   [
@@ -1278,7 +1311,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      123
+      126
     ]
   ],
   [
@@ -1289,7 +1322,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      124
+      127
     ]
   ],
   [
@@ -1322,7 +1355,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      127
+      130
     ]
   ],
   [
@@ -1344,7 +1377,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      129
+      132
     ]
   ],
   [
@@ -1355,7 +1388,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      130
+      133
     ]
   ],
   [
@@ -1366,7 +1399,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      131
+      134
     ]
   ],
   [
@@ -1377,7 +1410,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      132
+      135
     ]
   ],
   [
@@ -1388,7 +1421,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      133
+      136
     ]
   ],
   [
@@ -1399,7 +1432,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      134
+      137
     ]
   ],
   [
@@ -1410,7 +1443,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      135
+      138
     ]
   ],
   [
@@ -1421,7 +1454,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      140
+      143
     ]
   ],
   [
@@ -1432,7 +1465,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      153
+      156
     ]
   ],
   [
@@ -1487,18 +1520,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      170
+      173
     ]
   ],
   [
     "CONFIG_CMSIS_DSP_BASICMATH",
     "y",
     "bool",
-    "n",
+    "y",
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      175
+      178
     ]
   ],
   [
@@ -1509,7 +1542,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      176
+      179
     ]
   ],
   [
@@ -1520,18 +1553,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      177
+      180
     ]
   ],
   [
     "CONFIG_CMSIS_DSP_FASTMATH",
     "y",
     "bool",
-    "n",
+    "y",
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      178
+      181
     ]
   ],
   [
@@ -1542,7 +1575,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      179
+      182
     ]
   ],
   [
@@ -1553,7 +1586,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      180
+      183
     ]
   ],
   [
@@ -1564,7 +1597,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      181
+      184
     ]
   ],
   [
@@ -1575,7 +1608,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      182
+      185
     ]
   ],
   [
@@ -1586,7 +1619,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      183
+      186
     ]
   ],
   [
@@ -1597,7 +1630,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      184
+      187
     ]
   ],
   [
@@ -1608,7 +1641,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      185
+      188
     ]
   ],
   [
@@ -1619,7 +1652,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      186
+      189
     ]
   ],
   [
@@ -1630,7 +1663,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      187
+      190
     ]
   ],
   [
@@ -1641,7 +1674,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      188
+      191
     ]
   ],
   [
@@ -1652,7 +1685,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      189
+      192
     ]
   ],
   [
@@ -1663,7 +1696,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      198
+      201
     ]
   ],
   [
@@ -1674,7 +1707,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      199
+      202
     ]
   ],
   [
@@ -1685,7 +1718,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      200
+      203
     ]
   ],
   [
@@ -1696,7 +1729,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      201
+      204
     ]
   ],
   [
@@ -1707,7 +1740,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      202
+      205
     ]
   ],
   [
@@ -1729,7 +1762,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      209
+      212
     ]
   ],
   [
@@ -1761,7 +1794,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      217
+      220
     ]
   ],
   [
@@ -1849,7 +1882,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      257
+      260
     ]
   ],
   [
@@ -1893,7 +1926,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      271
+      274
     ]
   ],
   [
@@ -2069,7 +2102,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      341
+      344
     ]
   ],
   [
@@ -2135,7 +2168,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      365
+      368
     ]
   ],
   [
@@ -2201,7 +2234,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      382
+      385
     ]
   ],
   [
@@ -2245,7 +2278,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      401
+      404
     ]
   ],
   [
@@ -2278,7 +2311,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      414
+      417
     ]
   ],
   [
@@ -2289,7 +2322,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      415
+      418
     ]
   ],
   [
@@ -2333,7 +2366,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      425
+      428
     ]
   ],
   [
@@ -2355,7 +2388,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      432
+      435
     ]
   ],
   [
@@ -2377,7 +2410,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      440
+      443
     ]
   ],
   [
@@ -2399,7 +2432,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      451
+      454
     ]
   ],
   [
@@ -2421,7 +2454,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      458
+      461
     ]
   ],
   [
@@ -2475,7 +2508,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      469
+      472
     ]
   ],
   [
@@ -2508,7 +2541,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      478
+      481
     ]
   ],
   [
@@ -2552,7 +2585,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      497
+      500
     ]
   ],
   [
@@ -2574,7 +2607,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      501
+      504
     ]
   ],
   [
@@ -2585,7 +2618,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      502
+      505
     ]
   ],
   [
@@ -2596,7 +2629,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      503
+      506
     ]
   ],
   [
@@ -2607,7 +2640,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      504
+      507
     ]
   ],
   [
@@ -2618,7 +2651,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      505
+      508
     ]
   ],
   [
@@ -2629,7 +2662,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      506
+      509
     ]
   ],
   [
@@ -2700,7 +2733,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      513
+      516
     ]
   ],
   [
@@ -2711,7 +2744,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      514
+      517
     ]
   ],
   [
@@ -2722,7 +2755,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      515
+      518
     ]
   ],
   [
@@ -2766,7 +2799,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      537
+      540
     ]
   ],
   [
@@ -2883,7 +2916,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      557
+      560
     ]
   ],
   [
@@ -2894,7 +2927,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      558
+      561
     ]
   ],
   [
@@ -2915,7 +2948,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      560
+      563
     ]
   ],
   [
@@ -2926,7 +2959,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      561
+      564
+    ]
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_SOC_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -2948,7 +3040,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      565
+      575
     ]
   ],
   [
@@ -2975,11 +3067,11 @@
     "CONFIG_ARM_MPU_REGION_MIN_ALIGN_AND_SIZE",
     "n",
     "int",
-    "32",
+    "128",
     "default",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/zephyr/arch/arm/core/mpu/Kconfig",
-      14
+      12
     ]
   ],
   [
@@ -2990,7 +3082,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      569
+      579
     ]
   ],
   [
@@ -3011,7 +3103,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      575
+      585
     ]
   ],
   [
@@ -3043,7 +3135,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      578
+      588
     ]
   ],
   [
@@ -3054,7 +3146,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      579
+      589
     ]
   ],
   [
@@ -3065,7 +3157,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      580
+      590
     ]
   ],
   [
@@ -3076,7 +3168,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      581
+      591
     ]
   ],
   [
@@ -3087,7 +3179,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      582
+      592
     ]
   ],
   [
@@ -3102,6 +3194,33 @@
     ]
   ],
   [
+    "CONFIG_ARM_STORE_EXC_RETURN",
+    "n",
+    "bool",
+    "y",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/arch/arm/core/Kconfig",
+      271
+    ]
+  ],
+  [
+    "CONFIG_FP_HARDABI",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_FP_SOFTABI",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
     "CONFIG_FP16",
     "y",
     "bool",
@@ -3109,7 +3228,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      584
+      597
     ]
   ],
   [
@@ -3216,7 +3335,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      599
+      612
     ]
   ],
   [
@@ -3227,7 +3346,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      600
+      613
     ]
   ],
   [
@@ -3238,7 +3357,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      601
+      614
     ]
   ],
   [
@@ -3249,7 +3368,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      602
+      615
     ]
   ],
   [
@@ -3287,6 +3406,17 @@
     ]
   ],
   [
+    "CONFIG_MPU_STACK_GUARD_MIN_SIZE_FLOAT",
+    "n",
+    "int",
+    "128",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/arch/arm/core/mpu/Kconfig",
+      33
+    ]
+  ],
+  [
     "CONFIG_MPU_DISABLE_BACKGROUND_MAP",
     "y",
     "bool",
@@ -3294,7 +3424,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      609
+      623
     ]
   ],
   [
@@ -3305,7 +3435,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      610
+      624
     ]
   ],
   [
@@ -3316,7 +3446,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      611
+      625
     ]
   ],
   [
@@ -3327,7 +3457,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      612
+      626
     ]
   ],
   [
@@ -3368,7 +3498,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      622
+      636
     ]
   ],
   [
@@ -3390,7 +3520,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      624
+      638
+    ]
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_ARCH_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -3412,7 +3601,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      626
+      647
     ]
   ],
   [
@@ -3423,7 +3612,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      627
+      648
     ]
   ],
   [
@@ -3434,7 +3623,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      628
+      649
     ]
   ],
   [
@@ -3445,7 +3634,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      629
+      650
     ]
   ],
   [
@@ -3466,7 +3655,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      631
+      652
     ]
   ],
   [
@@ -3477,7 +3666,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      632
+      653
     ]
   ],
   [
@@ -3488,7 +3677,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      637
+      658
     ]
   ],
   [
@@ -3499,7 +3688,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      638
+      659
     ]
   ],
   [
@@ -3526,7 +3715,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      641
+      662
     ]
   ],
   [
@@ -3537,7 +3726,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      642
+      663
     ]
   ],
   [
@@ -3548,7 +3737,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      643
+      664
     ]
   ],
   [
@@ -3752,6 +3941,65 @@
     ]
   ],
   [
+    "CONFIG_MPU_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_MPU_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
+    ]
+  ],
+  [
     "CONFIG_MPU_REQUIRES_POWER_OF_TWO_ALIGNMENT",
     "n",
     "bool",
@@ -3772,6 +4020,17 @@
     ]
   ],
   [
+    "CONFIG_FPU_SHARING",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      706
+    ]
+  ],
+  [
     "CONFIG_CACHE_DOUBLEMAP",
     "y",
     "bool",
@@ -3779,7 +4038,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      683
+      712
     ]
   ],
   [
@@ -3804,6 +4063,65 @@
     ]
   ],
   [
+    "CONFIG_KERNEL_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_KERNEL_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
+    ]
+  ],
+  [
     "CONFIG_NUM_COOP_PRIORITIES",
     "y",
     "int",
@@ -3811,7 +4129,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      692
+      728
     ]
   ],
   [
@@ -3822,7 +4140,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      693
+      729
     ]
   ],
   [
@@ -3855,7 +4173,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      696
+      732
     ]
   ],
   [
@@ -3866,7 +4184,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      697
+      733
     ]
   ],
   [
@@ -3887,7 +4205,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      699
+      735
     ]
   ],
   [
@@ -3898,7 +4216,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      700
+      736
     ]
   ],
   [
@@ -3909,7 +4227,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      701
+      737
     ]
   ],
   [
@@ -3944,7 +4262,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      705
+      741
     ]
   ],
   [
@@ -3981,7 +4299,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      713
+      749
     ]
   ],
   [
@@ -3992,7 +4310,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      714
+      750
     ]
   ],
   [
@@ -4003,7 +4321,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      715
+      751
     ]
   ],
   [
@@ -4014,7 +4332,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      721
+      757
     ]
   ],
   [
@@ -4025,7 +4343,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      722
+      758
     ]
   ],
   [
@@ -4036,7 +4354,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      723
+      759
     ]
   ],
   [
@@ -4047,7 +4365,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      724
+      760
     ]
   ],
   [
@@ -4058,7 +4376,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      725
+      761
     ]
   ],
   [
@@ -4069,7 +4387,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      726
+      762
     ]
   ],
   [
@@ -4080,7 +4398,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      727
+      763
     ]
   ],
   [
@@ -4091,7 +4409,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      728
+      764
     ]
   ],
   [
@@ -4102,7 +4420,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      731
+      767
     ]
   ],
   [
@@ -4113,7 +4431,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      732
+      768
     ]
   ],
   [
@@ -4124,7 +4442,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      737
+      773
     ]
   ],
   [
@@ -4135,7 +4453,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      738
+      774
     ]
   ],
   [
@@ -4146,7 +4464,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      739
+      775
     ]
   ],
   [
@@ -4177,7 +4495,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      757
+      793
     ]
   ],
   [
@@ -4188,7 +4506,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      758
+      794
     ]
   ],
   [
@@ -4199,7 +4517,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      759
+      795
     ]
   ],
   [
@@ -4210,7 +4528,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      760
+      796
     ]
   ],
   [
@@ -4221,7 +4539,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      766
+      802
     ]
   ],
   [
@@ -4232,7 +4550,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      767
+      803
     ]
   ],
   [
@@ -4243,7 +4561,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      768
+      804
     ]
   ],
   [
@@ -4254,7 +4572,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      769
+      805
     ]
   ],
   [
@@ -4265,7 +4583,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      770
+      806
     ]
   ],
   [
@@ -4276,7 +4594,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      771
+      807
     ]
   ],
   [
@@ -4287,7 +4605,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      772
+      808
     ]
   ],
   [
@@ -4305,10 +4623,9 @@
     "y",
     "bool",
     "y",
-    "assign",
+    "select",
     [
-      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      776
+      "MPSC_PBUF"
     ]
   ],
   [
@@ -4319,7 +4636,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      777
+      813
     ]
   ],
   [
@@ -4351,7 +4668,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      794
+      830
     ]
   ],
   [
@@ -4393,7 +4710,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      800
+      836
     ]
   ],
   [
@@ -4404,7 +4721,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      801
+      837
     ]
   ],
   [
@@ -4415,7 +4732,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      807
+      843
     ]
   ],
   [
@@ -4426,7 +4743,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      808
+      844
     ]
   ],
   [
@@ -4437,7 +4754,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      809
+      845
     ]
   ],
   [
@@ -4448,7 +4765,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      815
+      851
     ]
   ],
   [
@@ -4459,7 +4776,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      816
+      852
     ]
   ],
   [
@@ -4470,7 +4787,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      817
+      853
     ]
   ],
   [
@@ -4481,7 +4798,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      818
+      854
     ]
   ],
   [
@@ -4492,7 +4809,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      819
+      855
     ]
   ],
   [
@@ -4503,7 +4820,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      835
+      871
     ]
   ],
   [
@@ -4514,7 +4831,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      836
+      872
     ]
   ],
   [
@@ -4525,7 +4842,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      837
+      873
     ]
   ],
   [
@@ -4536,7 +4853,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      838
+      874
     ]
   ],
   [
@@ -4547,7 +4864,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      839
+      875
     ]
   ],
   [
@@ -4558,7 +4875,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      840
+      876
     ]
   ],
   [
@@ -4569,7 +4886,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      846
+      882
     ]
   ],
   [
@@ -4580,7 +4897,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      847
+      883
     ]
   ],
   [
@@ -4591,7 +4908,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      848
+      884
     ]
   ],
   [
@@ -4602,7 +4919,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      849
+      885
     ]
   ],
   [
@@ -4613,7 +4930,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      850
+      886
     ]
   ],
   [
@@ -4624,7 +4941,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      851
+      887
     ]
   ],
   [
@@ -4635,7 +4952,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      852
+      888
+    ]
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_CLOCK_CONTROL_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -4646,7 +5022,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      853
+      896
     ]
   ],
   [
@@ -4657,7 +5033,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      854
+      897
     ]
   ],
   [
@@ -4679,7 +5055,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      856
+      899
     ]
   ],
   [
@@ -4690,7 +5066,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      857
+      900
     ]
   ],
   [
@@ -4711,7 +5087,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      859
+      902
     ]
   ],
   [
@@ -4722,7 +5098,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      860
+      903
     ]
   ],
   [
@@ -4733,7 +5109,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      861
+      904
     ]
   ],
   [
@@ -4744,7 +5120,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      862
+      905
     ]
   ],
   [
@@ -4755,7 +5131,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      863
+      906
     ]
   ],
   [
@@ -4766,7 +5142,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      864
+      907
     ]
   ],
   [
@@ -4777,7 +5153,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      865
+      908
     ]
   ],
   [
@@ -4788,7 +5164,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      866
+      909
     ]
   ],
   [
@@ -4799,7 +5175,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      867
+      910
+    ]
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_UART_CONSOLE_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -4810,7 +5245,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      868
+      918
     ]
   ],
   [
@@ -4821,7 +5256,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      869
+      919
     ]
   ],
   [
@@ -4832,7 +5267,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      870
+      920
     ]
   ],
   [
@@ -4843,7 +5278,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      871
+      921
     ]
   ],
   [
@@ -4854,7 +5289,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      872
+      922
     ]
   ],
   [
@@ -4865,7 +5300,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      873
+      923
     ]
   ],
   [
@@ -4876,7 +5311,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      874
+      924
     ]
   ],
   [
@@ -4887,7 +5322,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      875
+      925
     ]
   ],
   [
@@ -4898,7 +5333,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      876
+      926
     ]
   ],
   [
@@ -4909,7 +5344,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      877
+      927
     ]
   ],
   [
@@ -4920,7 +5355,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      878
+      928
     ]
   ],
   [
@@ -4931,7 +5366,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      879
+      929
     ]
   ],
   [
@@ -4942,7 +5377,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      880
+      930
     ]
   ],
   [
@@ -4953,7 +5388,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      881
+      931
     ]
   ],
   [
@@ -4964,7 +5399,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      882
+      932
     ]
   ],
   [
@@ -4975,7 +5410,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      887
+      937
     ]
   ],
   [
@@ -4986,7 +5421,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      890
+      940
     ]
   ],
   [
@@ -4997,7 +5432,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      891
+      941
     ]
   ],
   [
@@ -5008,7 +5443,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      892
+      942
+    ]
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_GPIO_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5019,7 +5513,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      893
+      950
     ]
   ],
   [
@@ -5030,7 +5524,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      894
+      951
     ]
   ],
   [
@@ -5041,7 +5535,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      895
+      952
     ]
   ],
   [
@@ -5052,7 +5546,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      896
+      953
     ]
   ],
   [
@@ -5063,7 +5557,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      897
+      954
+    ]
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_HWINFO_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5084,7 +5637,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      899
+      963
     ]
   ],
   [
@@ -5095,7 +5648,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      900
+      964
     ]
   ],
   [
@@ -5106,7 +5659,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      901
+      965
     ]
   ],
   [
@@ -5117,7 +5670,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      902
+      966
     ]
   ],
   [
@@ -5128,7 +5681,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      903
+      967
     ]
   ],
   [
@@ -5139,7 +5692,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      908
+      972
+    ]
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_INTC_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5150,7 +5762,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      909
+      980
     ]
   ],
   [
@@ -5161,7 +5773,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      910
+      981
     ]
   ],
   [
@@ -5172,7 +5784,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      913
+      984
     ]
   ],
   [
@@ -5183,7 +5795,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      914
+      985
     ]
   ],
   [
@@ -5194,7 +5806,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      915
+      986
     ]
   ],
   [
@@ -5205,7 +5817,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      916
+      987
     ]
   ],
   [
@@ -5216,7 +5828,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      917
+      988
     ]
   ],
   [
@@ -5227,7 +5839,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      918
+      989
     ]
   ],
   [
@@ -5238,7 +5850,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      919
+      990
     ]
   ],
   [
@@ -5249,7 +5861,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      930
+      1001
     ]
   ],
   [
@@ -5260,7 +5872,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      933
+      1004
     ]
   ],
   [
@@ -5271,7 +5883,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      934
+      1005
     ]
   ],
   [
@@ -5282,7 +5894,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      935
+      1006
     ]
   ],
   [
@@ -5293,7 +5905,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      936
+      1007
     ]
   ],
   [
@@ -5304,7 +5916,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      937
+      1008
     ]
   ],
   [
@@ -5315,7 +5927,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      938
+      1009
     ]
   ],
   [
@@ -5326,7 +5938,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      939
+      1010
     ]
   ],
   [
@@ -5343,6 +5955,65 @@
     ]
   ],
   [
+    "CONFIG_PINCTRL_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_PINCTRL_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
+    ]
+  ],
+  [
     "CONFIG_PINCTRL_DYNAMIC",
     "y",
     "bool",
@@ -5350,7 +6021,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      941
+      1019
     ]
   ],
   [
@@ -5361,7 +6032,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      942
+      1020
     ]
   ],
   [
@@ -5372,7 +6043,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      943
+      1021
     ]
   ],
   [
@@ -5383,7 +6054,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      944
+      1022
     ]
   ],
   [
@@ -5394,7 +6065,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      945
+      1023
     ]
   ],
   [
@@ -5405,7 +6076,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      946
+      1024
     ]
   ],
   [
@@ -5416,7 +6087,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      947
+      1025
     ]
   ],
   [
@@ -5427,7 +6098,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      948
+      1026
     ]
   ],
   [
@@ -5438,7 +6109,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      949
+      1027
     ]
   ],
   [
@@ -5449,7 +6120,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      950
+      1028
     ]
   ],
   [
@@ -5460,7 +6131,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      951
+      1029
+    ]
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_PWM_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5471,7 +6201,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      952
+      1037
     ]
   ],
   [
@@ -5482,7 +6212,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      953
+      1038
     ]
   ],
   [
@@ -5493,7 +6223,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      954
+      1039
     ]
   ],
   [
@@ -5504,7 +6234,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      961
+      1046
     ]
   ],
   [
@@ -5515,7 +6245,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      962
+      1047
     ]
   ],
   [
@@ -5526,7 +6256,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      963
+      1048
     ]
   ],
   [
@@ -5537,7 +6267,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      968
+      1053
     ]
   ],
   [
@@ -5548,7 +6278,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      969
+      1054
     ]
   ],
   [
@@ -5559,7 +6289,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      970
+      1055
     ]
   ],
   [
@@ -5570,7 +6300,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      971
+      1056
     ]
   ],
   [
@@ -5581,7 +6311,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      972
+      1057
     ]
   ],
   [
@@ -5592,7 +6322,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      973
+      1058
     ]
   ],
   [
@@ -5625,7 +6355,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      980
+      1065
+    ]
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_UART_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5636,7 +6425,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      981
+      1073
     ]
   ],
   [
@@ -5647,7 +6436,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      982
+      1074
     ]
   ],
   [
@@ -5658,7 +6447,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      983
+      1075
     ]
   ],
   [
@@ -5669,7 +6458,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      984
+      1076
     ]
   ],
   [
@@ -5680,7 +6469,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      985
+      1077
     ]
   ],
   [
@@ -5691,7 +6480,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      990
+      1082
     ]
   ],
   [
@@ -5702,7 +6491,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      991
+      1083
     ]
   ],
   [
@@ -5713,7 +6502,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      992
+      1084
     ]
   ],
   [
@@ -5724,7 +6513,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      993
+      1085
     ]
   ],
   [
@@ -5735,7 +6524,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      994
+      1086
     ]
   ],
   [
@@ -5746,7 +6535,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      995
+      1087
     ]
   ],
   [
@@ -5757,7 +6546,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      996
+      1088
     ]
   ],
   [
@@ -5768,7 +6557,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      997
+      1089
     ]
   ],
   [
@@ -5779,7 +6568,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      998
+      1090
+    ]
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_SPI_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -5790,7 +6638,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1005
+      1104
     ]
   ],
   [
@@ -5801,7 +6649,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1006
+      1105
     ]
   ],
   [
@@ -5822,7 +6670,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1012
+      1111
     ]
   ],
   [
@@ -5833,7 +6681,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1013
+      1112
     ]
   ],
   [
@@ -5844,7 +6692,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1014
+      1113
     ]
   ],
   [
@@ -5885,7 +6733,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1018
+      1117
     ]
   ],
   [
@@ -5904,7 +6752,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1022
+      1121
     ]
   ],
   [
@@ -5915,7 +6763,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1023
+      1122
     ]
   ],
   [
@@ -5926,7 +6774,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1024
+      1123
     ]
   ],
   [
@@ -5937,7 +6785,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1025
+      1124
     ]
   ],
   [
@@ -5958,7 +6806,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1027
+      1126
     ]
   ],
   [
@@ -5969,7 +6817,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1028
+      1127
     ]
   ],
   [
@@ -5980,7 +6828,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1029
+      1128
     ]
   ],
   [
@@ -5991,7 +6839,125 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1030
+      1129
+    ]
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_USB_DRIVER_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
+    ]
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_STM32_USB_COMMON_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -6002,7 +6968,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1037
+      1150
     ]
   ],
   [
@@ -6013,7 +6979,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1038
+      1151
     ]
   ],
   [
@@ -6024,7 +6990,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1039
+      1152
     ]
   ],
   [
@@ -6035,7 +7001,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1040
+      1153
     ]
   ],
   [
@@ -6046,7 +7012,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1041
+      1154
     ]
   ],
   [
@@ -6057,7 +7023,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1042
+      1155
     ]
   ],
   [
@@ -6068,7 +7034,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1043
+      1156
     ]
   ],
   [
@@ -6079,7 +7045,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1044
+      1157
     ]
   ],
   [
@@ -6090,7 +7056,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1047
+      1160
     ]
   ],
   [
@@ -6101,7 +7067,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1048
+      1161
     ]
   ],
   [
@@ -6112,7 +7078,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1049
+      1162
     ]
   ],
   [
@@ -6219,7 +7185,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1064
+      1177
     ]
   ],
   [
@@ -6230,7 +7196,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1065
+      1178
     ]
   ],
   [
@@ -6251,7 +7217,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1067
+      1180
     ]
   ],
   [
@@ -6262,7 +7228,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1068
+      1181
     ]
   ],
   [
@@ -6273,7 +7239,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1069
+      1182
     ]
   ],
   [
@@ -6284,7 +7250,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1070
+      1183
     ]
   ],
   [
@@ -6319,7 +7285,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1074
+      1187
     ]
   ],
   [
@@ -6341,7 +7307,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1081
+      1194
     ]
   ],
   [
@@ -6352,7 +7318,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1091
+      1204
     ]
   ],
   [
@@ -6363,7 +7329,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1097
+      1210
     ]
   ],
   [
@@ -6374,7 +7340,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1103
+      1216
     ]
   ],
   [
@@ -6385,7 +7351,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1104
+      1217
     ]
   ],
   [
@@ -6396,7 +7362,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1105
+      1218
     ]
   ],
   [
@@ -6407,7 +7373,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1106
+      1219
     ]
   ],
   [
@@ -6418,7 +7384,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1107
+      1220
     ]
   ],
   [
@@ -6429,7 +7395,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1108
+      1221
     ]
   ],
   [
@@ -6464,7 +7430,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1112
+      1225
     ]
   ],
   [
@@ -6475,7 +7441,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1113
+      1226
     ]
   ],
   [
@@ -6486,7 +7452,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1119
+      1232
     ]
   ],
   [
@@ -6497,7 +7463,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1125
+      1238
     ]
   ],
   [
@@ -6508,7 +7474,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1128
+      1241
     ]
   ],
   [
@@ -6519,7 +7485,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1133
+      1246
     ]
   ],
   [
@@ -6530,18 +7496,17 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1134
+      1247
     ]
   ],
   [
     "CONFIG_MPSC_PBUF",
     "y",
     "bool",
-    "n",
-    "assign",
+    "y",
+    "select",
     [
-      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1135
+      "LOG_MODE_DEFERRED && <choice LOG_MODE>"
     ]
   ],
   [
@@ -6552,7 +7517,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1136
+      1249
+    ]
+  ],
+  [
+    "CONFIG_MPSC_CLEAR_ALLOCATED",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1250
     ]
   ],
   [
@@ -6573,7 +7549,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1138
+      1252
     ]
   ],
   [
@@ -6616,7 +7592,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1143
+      1257
     ]
   ],
   [
@@ -6627,7 +7603,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1144
+      1258
     ]
   ],
   [
@@ -6638,7 +7614,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1145
+      1259
+    ]
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_CBPRINTF_PACKAGE_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -6649,18 +7684,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1146
-    ]
-  ],
-  [
-    "CONFIG_CBPRINTF_STATIC_PACKAGE_CHECK_ALIGNMENT",
-    "y",
-    "bool",
-    "n",
-    "assign",
-    [
-      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1147
+      1267
     ]
   ],
   [
@@ -6682,7 +7706,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1149
+      1269
     ]
   ],
   [
@@ -6693,7 +7717,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1150
+      1270
+    ]
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -6704,7 +7787,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1156
+      1283
     ]
   ],
   [
@@ -6715,7 +7798,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1157
+      1284
     ]
   ],
   [
@@ -6804,7 +7887,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1174
+      1301
     ]
   ],
   [
@@ -6815,7 +7898,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1175
+      1302
     ]
   ],
   [
@@ -6834,7 +7917,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1181
+      1308
     ]
   ],
   [
@@ -6856,7 +7939,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1183
+      1310
     ]
   ],
   [
@@ -6867,7 +7950,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1184
+      1311
     ]
   ],
   [
@@ -6878,7 +7961,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1185
+      1312
     ]
   ],
   [
@@ -6889,7 +7972,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1186
+      1313
     ]
   ],
   [
@@ -6900,7 +7983,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1187
+      1314
     ]
   ],
   [
@@ -6911,7 +7994,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1188
+      1315
     ]
   ],
   [
@@ -6932,7 +8015,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1190
+      1317
     ]
   ],
   [
@@ -6943,7 +8026,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1191
+      1318
     ]
   ],
   [
@@ -6954,7 +8037,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1197
+      1324
     ]
   ],
   [
@@ -6965,7 +8048,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1200
+      1327
     ]
   ],
   [
@@ -6976,7 +8059,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1206
+      1333
     ]
   ],
   [
@@ -6987,7 +8070,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1207
+      1334
     ]
   ],
   [
@@ -6998,7 +8081,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1214
+      1341
     ]
   ],
   [
@@ -7009,7 +8092,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1215
+      1342
     ]
   ],
   [
@@ -7020,7 +8103,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1216
+      1343
     ]
   ],
   [
@@ -7031,7 +8114,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1217
+      1344
     ]
   ],
   [
@@ -7042,7 +8125,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1222
+      1349
     ]
   ],
   [
@@ -7053,7 +8136,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1228
+      1355
     ]
   ],
   [
@@ -7064,7 +8147,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1229
+      1356
     ]
   ],
   [
@@ -7075,7 +8158,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1230
+      1357
     ]
   ],
   [
@@ -7106,7 +8189,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1233
+      1360
     ]
   ],
   [
@@ -7117,7 +8200,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1234
+      1361
     ]
   ],
   [
@@ -7128,7 +8211,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1235
+      1362
     ]
   ],
   [
@@ -7139,7 +8222,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1236
+      1363
     ]
   ],
   [
@@ -7150,7 +8233,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1237
+      1364
     ]
   ],
   [
@@ -7161,7 +8244,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1238
+      1365
     ]
   ],
   [
@@ -7172,7 +8255,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1239
+      1366
     ]
   ],
   [
@@ -7183,7 +8266,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1240
+      1367
     ]
   ],
   [
@@ -7194,7 +8277,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1241
+      1368
     ]
   ],
   [
@@ -7205,7 +8288,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1242
+      1369
     ]
   ],
   [
@@ -7216,7 +8299,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1245
+      1372
     ]
   ],
   [
@@ -7227,7 +8310,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1246
+      1373
     ]
   ],
   [
@@ -7238,7 +8321,18 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1247
+      1374
+    ]
+  ],
+  [
+    "CONFIG_CPU_LOAD_LOG_PERIODICALLY",
+    "y",
+    "int",
+    "0",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1375
     ]
   ],
   [
@@ -7249,7 +8343,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1248
+      1376
     ]
   ],
   [
@@ -7260,7 +8354,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1249
+      1377
     ]
   ],
   [
@@ -7271,7 +8365,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1250
+      1378
     ]
   ],
   [
@@ -7282,7 +8376,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1251
+      1379
     ]
   ],
   [
@@ -7293,7 +8387,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1256
+      1384
     ]
   ],
   [
@@ -7304,7 +8398,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1257
+      1385
     ]
   ],
   [
@@ -7315,7 +8409,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1260
+      1388
     ]
   ],
   [
@@ -7326,7 +8420,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1261
+      1389
     ]
   ],
   [
@@ -7337,7 +8431,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1266
+      1394
     ]
   ],
   [
@@ -7348,7 +8442,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1267
+      1395
     ]
   ],
   [
@@ -7359,7 +8453,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1268
+      1396
     ]
   ],
   [
@@ -7370,7 +8464,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1271
+      1399
     ]
   ],
   [
@@ -7381,7 +8475,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1276
+      1404
     ]
   ],
   [
@@ -7392,7 +8486,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1279
+      1407
     ]
   ],
   [
@@ -7403,18 +8497,731 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1280
+      1408
     ]
   ],
   [
-    "CONFIG_LOG_OUTPUT",
+    "CONFIG_LOG_CORE_INIT_PRIORITY",
+    "y",
+    "int",
+    "0",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1413
+    ]
+  ],
+  [
+    "CONFIG_LOG_MODE_DEFERRED",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_LOG_MODE_IMMEDIATE",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_MODE_MINIMAL",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_FRONTEND",
     "y",
     "bool",
     "n",
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1285
+      1417
+    ]
+  ],
+  [
+    "CONFIG_LOG_FRONTEND_OPT_API",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1418
+    ]
+  ],
+  [
+    "CONFIG_LOG_CUSTOM_HEADER",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1419
+    ]
+  ],
+  [
+    "CONFIG_LOG_MULTIDOMAIN",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1420
+    ]
+  ],
+  [
+    "CONFIG_LOG_FLUSH_SLEEP_US",
+    "y",
+    "int",
+    "10000",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1421
+    ]
+  ],
+  [
+    "CONFIG_LOG_RUNTIME_FILTERING",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1426
+    ]
+  ],
+  [
+    "CONFIG_LOG_DEFAULT_LEVEL",
+    "y",
+    "int",
+    "3",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1427
+    ]
+  ],
+  [
+    "CONFIG_LOG_OVERRIDE_LEVEL",
+    "y",
+    "int",
+    "0",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1428
+    ]
+  ],
+  [
+    "CONFIG_LOG_MAX_LEVEL",
+    "y",
+    "int",
+    "4",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1429
+    ]
+  ],
+  [
+    "CONFIG_LOG_PRINTK",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1435
+    ]
+  ],
+  [
+    "CONFIG_LOG_MODE_OVERFLOW",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1436
+    ]
+  ],
+  [
+    "CONFIG_LOG_BLOCK_IN_THREAD",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1437
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_TRIGGER_THRESHOLD",
+    "y",
+    "int",
+    "10",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1438
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_THREAD",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1439
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_THREAD_STARTUP_DELAY_MS",
+    "y",
+    "int",
+    "0",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1440
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_THREAD_SLEEP_MS",
+    "y",
+    "int",
+    "1000",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1441
+    ]
+  ],
+  [
+    "CONFIG_LOG_PROCESS_THREAD_CUSTOM_PRIORITY",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1442
+    ]
+  ],
+  [
+    "CONFIG_LOG_BUFFER_SIZE",
+    "y",
+    "int",
+    "1024",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1443
+    ]
+  ],
+  [
+    "CONFIG_LOG_TRACE_SHORT_TIMESTAMP",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1444
+    ]
+  ],
+  [
+    "CONFIG_LOG_TIMESTAMP_64BIT",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1445
+    ]
+  ],
+  [
+    "CONFIG_LOG_TIMESTAMP_USE_REALTIME",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1446
+    ]
+  ],
+  [
+    "CONFIG_LOG_SPEED",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1447
+    ]
+  ],
+  [
+    "CONFIG_LOG_FUNC_NAME_PREFIX_ERR",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1457
+    ]
+  ],
+  [
+    "CONFIG_LOG_FUNC_NAME_PREFIX_WRN",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1458
+    ]
+  ],
+  [
+    "CONFIG_LOG_FUNC_NAME_PREFIX_INF",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1459
+    ]
+  ],
+  [
+    "CONFIG_LOG_FUNC_NAME_PREFIX_DBG",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1460
+    ]
+  ],
+  [
+    "CONFIG_LOG_MIPI_SYST_ENABLE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1463
+    ]
+  ],
+  [
+    "CONFIG_LOG_DOMAIN_NAME_PREFIX",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1464
+    ]
+  ],
+  [
+    "CONFIG_LOG_THREAD_ID_PREFIX",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1465
+    ]
+  ],
+  [
+    "CONFIG_LOG_CUSTOM_FORMAT_SUPPORT",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1466
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SHOW_TIMESTAMP",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1467
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SHOW_LEVEL",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1468
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SHOW_COLOR",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1469
+    ]
+  ],
+  [
+    "CONFIG_LOG_INFO_COLOR_GREEN",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1470
+    ]
+  ],
+  [
+    "CONFIG_LOG_DBG_COLOR_BLUE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1471
+    ]
+  ],
+  [
+    "CONFIG_LOG_TAG_MAX_LEN",
+    "y",
+    "int",
+    "0",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1472
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SUPPORTS_FORMAT_TIMESTAMP",
+    "n",
+    "bool",
+    "y",
+    "select",
+    [
+      "LOG_BACKEND_UART && UART_CONSOLE && !LOG_FRONTEND_ONLY && !LOG_MODE_MINIMAL && LOG"
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_FORMAT_TIMESTAMP",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1474
+    ]
+  ],
+  [
+    "CONFIG_LOG_OUTPUT_FORMAT_TIME_TIMESTAMP",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_LOG_OUTPUT_FORMAT_DATE_TIMESTAMP",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_OUTPUT_FORMAT_ISO8601_TIMESTAMP",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_OUTPUT_FORMAT_LINUX_TIMESTAMP",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_OUTPUT_FORMAT_CUSTOM_TIMESTAMP",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_BACKEND_CRLF_NONE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1480
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_CRLF_LFONLY",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1481
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SKIP_SOURCE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1482
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_SWO",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1488
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1489
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_BUFFER_SIZE",
+    "y",
+    "int",
+    "1",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1490
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_AUTOSTART",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1491
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_OUTPUT_TEXT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_OUTPUT_DICTIONARY",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_OUTPUT_CUSTOM",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_LOG_BACKEND_UART_OUTPUT_DEFAULT",
+    "n",
+    "int",
+    "0",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_format_config",
+      42
+    ]
+  ],
+  [
+    "CONFIG_LOG_BACKEND_IPC_SERVICE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1496
+    ]
+  ],
+  [
+    "CONFIG_LOG_USE_VLA",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1502
+    ]
+  ],
+  [
+    "CONFIG_LOG_SIMPLE_MSG_OPTIMIZE",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1503
+    ]
+  ],
+  [
+    "CONFIG_LOG_ALWAYS_RUNTIME",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1504
+    ]
+  ],
+  [
+    "CONFIG_LOG_FMT_SECTION",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1505
+    ]
+  ],
+  [
+    "CONFIG_LOG_FMT_STRING_VALIDATE",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1506
+    ]
+  ],
+  [
+    "CONFIG_LOG_MEM_UTILIZATION",
+    "y",
+    "bool",
+    "n",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1507
+    ]
+  ],
+  [
+    "CONFIG_LOG_FAILURE_REPORT_PERIOD",
+    "y",
+    "int",
+    "1000",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1508
+    ]
+  ],
+  [
+    "CONFIG_LOG_RATELIMIT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1511
+    ]
+  ],
+  [
+    "CONFIG_LOG_RATELIMIT_INTERVAL_MS",
+    "y",
+    "int",
+    "5000",
+    "assign",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
+      1512
+    ]
+  ],
+  [
+    "CONFIG_LOG_OUTPUT",
+    "y",
+    "bool",
+    "y",
+    "select",
+    [
+      "LOG_BACKEND_UART_OUTPUT_TEXT && <choice LOG_BACKEND_UART_OUTPUT>"
     ]
   ],
   [
@@ -7425,7 +9232,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1288
+      1516
     ]
   ],
   [
@@ -7436,7 +9243,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1289
+      1517
     ]
   ],
   [
@@ -7447,7 +9254,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1298
+      1526
     ]
   ],
   [
@@ -7458,7 +9265,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1301
+      1529
     ]
   ],
   [
@@ -7469,7 +9276,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1304
+      1532
     ]
   ],
   [
@@ -7480,7 +9287,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1305
+      1533
     ]
   ],
   [
@@ -7491,7 +9298,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1310
+      1538
     ]
   ],
   [
@@ -7502,7 +9309,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1313
+      1541
     ]
   ],
   [
@@ -7523,7 +9330,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1319
+      1547
     ]
   ],
   [
@@ -7534,7 +9341,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1325
+      1553
     ]
   ],
   [
@@ -7545,7 +9352,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1333
+      1561
     ]
   ],
   [
@@ -7556,7 +9363,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1338
+      1566
     ]
   ],
   [
@@ -7567,7 +9374,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1339
+      1567
     ]
   ],
   [
@@ -7578,7 +9385,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1340
+      1568
     ]
   ],
   [
@@ -7589,7 +9396,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1343
+      1571
     ]
   ],
   [
@@ -7600,7 +9407,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1348
+      1576
     ]
   ],
   [
@@ -7611,7 +9418,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1349
+      1577
     ]
   ],
   [
@@ -7622,7 +9429,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1350
+      1578
     ]
   ],
   [
@@ -7633,7 +9440,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1353
+      1581
     ]
   ],
   [
@@ -7644,7 +9451,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1354
+      1582
     ]
   ],
   [
@@ -7655,7 +9462,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1355
+      1583
     ]
   ],
   [
@@ -7666,7 +9473,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1356
+      1584
     ]
   ],
   [
@@ -7677,7 +9484,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1361
+      1589
     ]
   ],
   [
@@ -7688,7 +9495,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1364
+      1592
     ]
   ],
   [
@@ -7699,7 +9506,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1369
+      1597
     ]
   ],
   [
@@ -7710,7 +9517,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1370
+      1598
     ]
   ],
   [
@@ -7721,7 +9528,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1371
+      1599
     ]
   ],
   [
@@ -7732,7 +9539,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1372
+      1600
     ]
   ],
   [
@@ -7743,7 +9550,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1373
+      1601
     ]
   ],
   [
@@ -7754,7 +9561,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1379
+      1607
     ]
   ],
   [
@@ -7765,7 +9572,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1380
+      1608
     ]
   ],
   [
@@ -7776,7 +9583,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1383
+      1611
     ]
   ],
   [
@@ -7787,7 +9594,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1384
+      1612
     ]
   ],
   [
@@ -7798,7 +9605,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1385
+      1613
+    ]
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_USB_DEVICE_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -7809,7 +9675,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1386
+      1621
     ]
   ],
   [
@@ -7820,7 +9686,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1387
+      1622
     ]
   ],
   [
@@ -7831,7 +9697,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1388
+      1623
     ]
   ],
   [
@@ -7842,7 +9708,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1389
+      1624
     ]
   ],
   [
@@ -7853,7 +9719,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1390
+      1625
     ]
   ],
   [
@@ -7864,7 +9730,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1391
+      1626
     ]
   ],
   [
@@ -7885,7 +9751,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1393
+      1628
     ]
   ],
   [
@@ -7896,7 +9762,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1394
+      1629
     ]
   ],
   [
@@ -7907,7 +9773,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1395
+      1630
     ]
   ],
   [
@@ -7918,7 +9784,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1396
+      1631
     ]
   ],
   [
@@ -7929,7 +9795,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1397
+      1632
     ]
   ],
   [
@@ -7940,7 +9806,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1398
+      1633
     ]
   ],
   [
@@ -7951,7 +9817,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1399
+      1634
     ]
   ],
   [
@@ -7962,7 +9828,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1400
+      1635
     ]
   ],
   [
@@ -7973,7 +9839,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1401
+      1636
     ]
   ],
   [
@@ -7984,7 +9850,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1402
+      1637
     ]
   ],
   [
@@ -7995,7 +9861,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1403
+      1638
     ]
   ],
   [
@@ -8006,7 +9872,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1404
+      1639
     ]
   ],
   [
@@ -8017,7 +9883,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1405
+      1640
     ]
   ],
   [
@@ -8028,7 +9894,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1410
+      1645
     ]
   ],
   [
@@ -8039,7 +9905,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1411
+      1646
     ]
   ],
   [
@@ -8083,7 +9949,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1415
+      1650
     ]
   ],
   [
@@ -8094,7 +9960,66 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1416
+      1651
+    ]
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_OFF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_ERR",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_WRN",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_INF",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_DBG",
+    "y",
+    "bool",
+    null,
+    "unset",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL_DEFAULT",
+    "y",
+    "bool",
+    "y",
+    "assign",
+    null
+  ],
+  [
+    "CONFIG_USB_CDC_ACM_LOG_LEVEL",
+    "n",
+    "int",
+    "3",
+    "default",
+    [
+      "/home/viktor/zephyr-standalone/zephyrproject/zephyr/subsys/logging/Kconfig.template.log_config",
+      36
     ]
   ],
   [
@@ -8105,7 +10030,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1419
+      1661
     ]
   ],
   [
@@ -8116,7 +10041,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1420
+      1662
     ]
   ],
   [
@@ -8127,7 +10052,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1425
+      1667
     ]
   ],
   [
@@ -8138,7 +10063,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1426
+      1668
     ]
   ],
   [
@@ -8149,7 +10074,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1427
+      1669
     ]
   ],
   [
@@ -8160,7 +10085,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1430
+      1672
     ]
   ],
   [
@@ -8171,7 +10096,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1431
+      1673
     ]
   ],
   [
@@ -8182,7 +10107,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1432
+      1674
     ]
   ],
   [
@@ -8193,7 +10118,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1433
+      1675
     ]
   ],
   [
@@ -8204,7 +10129,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1434
+      1676
     ]
   ],
   [
@@ -8215,7 +10140,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1435
+      1677
     ]
   ],
   [
@@ -8226,7 +10151,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1436
+      1678
     ]
   ],
   [
@@ -8305,7 +10230,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1454
+      1696
     ]
   ],
   [
@@ -8316,7 +10241,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1455
+      1697
     ]
   ],
   [
@@ -8354,7 +10279,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1459
+      1701
     ]
   ],
   [
@@ -8365,7 +10290,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1460
+      1702
     ]
   ],
   [
@@ -8376,7 +10301,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1465
+      1707
     ]
   ],
   [
@@ -8387,7 +10312,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1466
+      1708
     ]
   ],
   [
@@ -8409,7 +10334,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1468
+      1710
     ]
   ],
   [
@@ -8420,7 +10345,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1469
+      1711
     ]
   ],
   [
@@ -8453,7 +10378,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1474
+      1716
     ]
   ],
   [
@@ -8514,7 +10439,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1486
+      1728
     ]
   ],
   [
@@ -8525,7 +10450,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1487
+      1729
     ]
   ],
   [
@@ -8536,7 +10461,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1488
+      1730
     ]
   ],
   [
@@ -8587,7 +10512,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1494
+      1736
     ]
   ],
   [
@@ -8598,7 +10523,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1495
+      1737
     ]
   ],
   [
@@ -8609,7 +10534,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1496
+      1738
     ]
   ],
   [
@@ -8620,7 +10545,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1497
+      1739
     ]
   ],
   [
@@ -8631,7 +10556,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1498
+      1740
     ]
   ],
   [
@@ -8666,7 +10591,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1502
+      1744
     ]
   ],
   [
@@ -8677,7 +10602,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1503
+      1745
     ]
   ],
   [
@@ -8747,7 +10672,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1522
+      1764
     ]
   ],
   [
@@ -8758,7 +10683,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1523
+      1765
     ]
   ],
   [
@@ -8769,7 +10694,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1524
+      1766
     ]
   ],
   [
@@ -8780,7 +10705,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1525
+      1767
     ]
   ],
   [
@@ -8791,7 +10716,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1526
+      1768
     ]
   ],
   [
@@ -8802,7 +10727,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1527
+      1769
     ]
   ],
   [
@@ -8813,7 +10738,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1528
+      1770
     ]
   ],
   [
@@ -8824,7 +10749,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1529
+      1771
     ]
   ],
   [
@@ -8835,7 +10760,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1530
+      1772
     ]
   ],
   [
@@ -8846,7 +10771,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1531
+      1773
     ]
   ],
   [
@@ -8857,7 +10782,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1532
+      1774
     ]
   ],
   [
@@ -8868,7 +10793,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1533
+      1775
     ]
   ],
   [
@@ -8879,7 +10804,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1534
+      1776
     ]
   ],
   [
@@ -8890,7 +10815,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1535
+      1777
     ]
   ],
   [
@@ -8901,7 +10826,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1536
+      1778
     ]
   ],
   [
@@ -8912,7 +10837,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1537
+      1779
     ]
   ],
   [
@@ -8923,7 +10848,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1538
+      1780
     ]
   ],
   [
@@ -8934,7 +10859,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1539
+      1781
     ]
   ],
   [
@@ -8945,7 +10870,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1540
+      1782
     ]
   ],
   [
@@ -8956,7 +10881,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1541
+      1783
     ]
   ],
   [
@@ -8967,7 +10892,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1542
+      1784
     ]
   ],
   [
@@ -8990,7 +10915,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1546
+      1788
     ]
   ],
   [
@@ -9001,7 +10926,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1547
+      1789
     ]
   ],
   [
@@ -9012,7 +10937,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1548
+      1790
     ]
   ],
   [
@@ -9023,7 +10948,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1554
+      1796
     ]
   ],
   [
@@ -9034,7 +10959,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1555
+      1797
     ]
   ],
   [
@@ -9045,7 +10970,7 @@
     "assign",
     [
       "/home/viktor/zephyr-standalone/zephyrproject/haptic/build/zephyr/.config",
-      1561
+      1803
     ]
   ]
 ]

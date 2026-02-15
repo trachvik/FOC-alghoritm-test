@@ -1,5 +1,5 @@
  OUTPUT_FORMAT("elf32-littlearm")
-_region_min_align = 32;
+_region_min_align = 128;
 MEMORY
     {
     FLASH (rx) : ORIGIN = (0x8000000 + 0x0), LENGTH = (512 * 1024 - 0x0 - 0x0)
