@@ -5,4 +5,7 @@ project(blinky_blackpill)
 target_sources(app PRIVATE 
     src/main.c
     src/drivers/as5048a.c
+    src/drivers/bldc_driver_6pwm.c
+    src/drivers/bldc_motor.c
+    src/drivers/platform_zephyr.c
 )
