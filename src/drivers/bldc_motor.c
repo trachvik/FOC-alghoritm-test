@@ -1,6 +1,8 @@
 #include "bldc_motor.h"
+#include "bldc_driver_6pwm.h"
 #include <string.h>
 #include <math.h>
+#include <zephyr/kernel.h>
 
 /* Helper macros */
 #define _ISSET(x) ((x) != NOT_SET)
@@ -24,28 +26,94 @@
 #define DEF_MOTION_DOWNSAMPLE 0
 #define DEF_MON_DOWNSAMPLE 100
 
-/* External time functions - platform specific */
-extern unsigned long micros(void);
-extern void delay_ms(unsigned long ms);
+/**
+ * Time functions
+ */
+unsigned long micros(void)
+{
+    return k_cyc_to_us_floor64(k_cycle_get_64());
+}
 
-/* External sensor functions - to be implemented */
+void delay_ms(unsigned long ms)
+{
+    k_msleep(ms);
+}
+
+/**
+ * Sensor interface functions (implemented in as5048a.c)
+ */
 extern void sensor_update(sensor_t *sensor);
 extern float sensor_get_angle(sensor_t *sensor);
 extern float sensor_get_velocity(sensor_t *sensor);
 extern bool sensor_needs_search(sensor_t *sensor);
 
-/* External driver functions */
-extern void driver_set_pwm(bldc_driver_t *driver, float ua, float ub, float uc);
-extern void driver_enable(bldc_driver_t *driver);
-extern void driver_disable(bldc_driver_t *driver);
-extern bool driver_is_initialized(bldc_driver_t *driver);
-extern float driver_get_voltage_limit(bldc_driver_t *driver);
+/**
+ * Driver interface wrapper functions
+ */
+void driver_set_pwm(bldc_driver_t *driver, float ua, float ub, float uc)
+{
+    if (driver == NULL) return;
+    
+    bldc_driver_6pwm_t *drv = (bldc_driver_6pwm_t*)driver;
+    bldc_driver_6pwm_set_pwm(drv, ua, ub, uc);
+}
 
-/* External current sense functions */
-extern void current_sense_enable(current_sense_t *cs);
-extern void current_sense_disable(current_sense_t *cs);
-extern bool current_sense_is_initialized(current_sense_t *cs);
-extern int current_sense_driver_align(current_sense_t *cs, float voltage, int8_t modulation_centered);
+void driver_enable(bldc_driver_t *driver)
+{
+    if (driver == NULL) return;
+    
+    bldc_driver_6pwm_t *drv = (bldc_driver_6pwm_t*)driver;
+    bldc_driver_6pwm_enable(drv);
+}
+
+void driver_disable(bldc_driver_t *driver)
+{
+    if (driver == NULL) return;
+    
+    bldc_driver_6pwm_t *drv = (bldc_driver_6pwm_t*)driver;
+    bldc_driver_6pwm_disable(drv);
+}
+
+bool driver_is_initialized(bldc_driver_t *driver)
+{
+    if (driver == NULL) return false;
+    
+    bldc_driver_6pwm_t *drv = (bldc_driver_6pwm_t*)driver;
+    return drv->initialized;
+}
+
+float driver_get_voltage_limit(bldc_driver_t *driver)
+{
+    if (driver == NULL) return 0.0f;
+    
+    bldc_driver_6pwm_t *drv = (bldc_driver_6pwm_t*)driver;
+    return drv->voltage_limit;
+}
+
+/**
+ * Current sense stubs
+ */
+void current_sense_enable(current_sense_t *cs)
+{
+    /* Stub - no current sensing yet */
+}
+
+void current_sense_disable(current_sense_t *cs)
+{
+    /* Stub - no current sensing yet */
+}
+
+bool current_sense_is_initialized(current_sense_t *cs)
+{
+    /* Stub - no current sensing yet */
+    return false;
+}
+
+int current_sense_driver_align(current_sense_t *cs, float voltage, int8_t modulation_centered)
+{
+    /* Stub - no current sensing yet */
+    return 1;
+}
 
 /* Trapezoid maps */
 static const int trap_120_map[6][3] = {

@@ -4,6 +4,7 @@
  */
 
 #include "as5048a.h"
+#include "bldc_motor.h"
 #include <zephyr/logging/log.h>
 #include <math.h>
 
@@ -104,4 +105,40 @@ int as5048a_read_angle_rad(struct as5048a_device *dev, float *angle_rad)
 	*angle_rad = ((float)raw_angle / ANGLE_RESOLUTION) * 2.0f * M_PI;
 
 	return 0;
+}
+
+/*
+ * Sensor interface wrapper functions for FOC library
+ */
+
+/* Global pointer to AS5048A device - set from main */
+extern struct as5048a_device *g_as5048a;
+
+void sensor_update(sensor_t *sensor)
+{
+	/* AS5048A is read on-demand, no update needed */
+}
+
+float sensor_get_angle(sensor_t *sensor)
+{
+	if (g_as5048a == NULL) return 0.0f;
+	
+	float angle_rad = 0.0f;
+	if (as5048a_read_angle_rad(g_as5048a, &angle_rad) == 0) {
+		return angle_rad;
+	}
+	return 0.0f;
+}
+
+float sensor_get_velocity(sensor_t *sensor)
+{
+	/* Calculate velocity from angle difference */
+	/* TODO: Implement velocity calculation */
+	return 0.0f;
+}
+
+bool sensor_needs_search(sensor_t *sensor)
+{
+	/* No index search needed for absolute encoder */
+	return false;
 }
