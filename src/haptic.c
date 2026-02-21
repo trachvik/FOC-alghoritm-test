@@ -25,6 +25,11 @@
 #define AS5048A_NODE DT_NODELABEL(as5048a)
 static const struct spi_dt_spec as5048a_spi = SPI_DT_SPEC_GET(AS5048A_NODE, SPI_WORD_SET(16) | SPI_TRANSFER_MSB | SPI_MODE_CPHA, 0);
 
+/* Haptic state variables */
+static float start_angle = 0.0f;
+static int step_count_buffer = 0;
+static int num_steps_old = NUM_STEPS;
+
 
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 {
@@ -110,6 +115,20 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     motor->controller = TORQUE;
     motor->target = 0.0f;  /* Start with zero torque */
 
+    /* Settle motor at zero torque after calibration */
+    for (int i = 0; i < 100; i++) {
+        bldc_motor_loop_foc(motor);
+        bldc_motor_move(motor, 0.0f);
+        k_msleep(1);
+    }
+
+    k_msleep(500);
+    
+    /* Store start angle for relative position calculation */
+    start_angle = sensor_get_angle(encoder);
+    step_count_buffer = 0;
+    num_steps_old = NUM_STEPS;
+
     printk("Starting motor control in 2 seconds...\n");
     k_msleep(2000);
     return 0;
@@ -117,18 +136,86 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
 void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
 {
-    uint16_t raw_angle;
     struct as5048a_device *as5048a = (struct as5048a_device *)encoder;
-    //while (1)
-    //{ 
-        /* Read encoder */
-        if (as5048a_read_raw(as5048a, &raw_angle) == 0)
-        {
-            /* SimpleFOC style: move() first to calculate voltages, then loopFOC() to apply them */
-            bldc_motor_move(motor, 2.0f);  /* Pure voltage control: 2V on q-axis */
-            bldc_motor_loop_foc(motor);  /* Apply calculated voltages */
-            
-
+    uint16_t raw_angle;
+    float target_voltage, last_voltage = 0.0f;
+    float voltage_filter_alpha = 0.8f;
+    static uint64_t last_print = 0;
+    
+    uint64_t now = k_uptime_get();
+    int num_steps = NUM_STEPS;
+    
+    /* Read encoder */
+    if (as5048a_read_raw(as5048a, &raw_angle) != 0) {
+        return;
+    }
+    
+    /* Convert raw angle to radians (0 to 2π) */
+    float current_angle = ((float)raw_angle / 16384.0f) * _2PI;
+    
+    /* UPDATE SENSOR and RUN FOC FIRST, then MOVE */
+    bldc_motor_loop_foc(motor);
+    
+    /* Handle num_steps change with step persistence */
+    if (num_steps != num_steps_old) {
+        step_count_buffer = (int)((num_steps_old > 0) ? ((float)num_steps_old / _2PI) * (current_angle - start_angle) : 0);
+        start_angle = current_angle;
+        num_steps_old = num_steps;
+    }
+    
+    /* Calculate relative angle */
+    float angle_rel = current_angle - start_angle;
+    
+    /* Normalize angle to [0, 2π] */
+    while (angle_rel > _2PI) angle_rel -= _2PI;
+    while (angle_rel < 0) angle_rel += _2PI;
+    
+    /* Calculate step position */
+    float step_size = (num_steps > 0) ? (_2PI / (float)num_steps) : _2PI;
+    int step_count_abs = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0;
+    float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
+    
+    /* Debug print */
+    if (now - last_print > 500) {
+        printk("Angle: %.1f°, Vel: %.2f rad/s\n", 
+               angle_rel * 180.0f / 3.14159f, motor->shaft_velocity);
+        last_print = now;
+    }
+    
+    /* Smooth mode */
+    if (num_steps == 0) {
+        float damping = 0.3f;
+        target_voltage = -damping * motor->shaft_velocity;
+        
+        float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
+        if (abs_vel < 0.5f) {
+            target_voltage = 0.0f;
+        } else if (abs_vel < 3.0f) {
+            float scale = (abs_vel - 0.5f) / 2.5f;
+            target_voltage *= scale;
         }
-    //}
+        
+        target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;
+    }
+    /* Detent mode */
+    else {
+        float norm_pos = between_steps_pos / step_size;
+        target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos);
+        
+        float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
+        
+        if (dist < 0.08f) {
+            target_voltage = 0.0f;
+        } else if (dist < 0.15f) {
+            float scale = (dist - 0.08f) / 0.07f;
+            target_voltage *= scale;
+        }
+        
+        target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage;
+    }
+    
+    last_voltage = target_voltage;
+    
+    /* SEND VOLTAGE AFTER loopFOC */
+    bldc_motor_move(motor, target_voltage);
 }
