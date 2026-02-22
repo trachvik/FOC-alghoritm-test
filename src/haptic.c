@@ -2,11 +2,12 @@
 #include "drivers/as5048a.h"
 #include <zephyr/drivers/spi.h>
 #include <zephyr/kernel.h>
+#include <math.h>
 
 #define NUM_STEPS 8
 #define SUPPLY_VOLTAGE 5.0f
-#define HAPTIC_OUTPUT_GAIN 1.55f
-#define HAPTIC_VOLTAGE_LIMIT 3.0f
+#define HAPTIC_OUTPUT_GAIN 2.0f
+#define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
 
 /* PWM pin definitions for 6PWM BLDC driver */
 /* TODO: Update these pin numbers based on your actual hardware */
@@ -44,7 +45,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("1. Initializing AS5048A encoder...\n");
     if (as5048a_init(as5048a, &as5048a_spi) < 0)
     {
-        printk("   ERROR: Failed to initialize AS5048A: %d\n");
+        printk("   ERROR: Failed to initialize AS5048A: %d\n", -1);
         return -1;
     }
     printk("   [OK] AS5048A ready\n\n");
@@ -129,7 +130,12 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     k_msleep(500);
     
     /* Store start angle for relative position calculation */
-    start_angle = sensor_get_angle(encoder);
+    uint16_t startup_raw = 0;
+    if (as5048a_read_raw(as5048a, &startup_raw) == 0) {
+        start_angle = ((float)startup_raw / 16384.0f) * _2PI;
+    } else {
+        start_angle = 0.0f;
+    }
     step_count_buffer = 0;
     num_steps_old = NUM_STEPS;
 
@@ -188,14 +194,14 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     
     /* Smooth mode */
     if (num_steps == 0) {
-        float damping = 0.3f;
+        float damping = 0.5f;
         target_voltage = -damping * motor->shaft_velocity;
         
         float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
-        if (abs_vel < 0.5f) {
+        if (abs_vel < 0.1f) {
             target_voltage = 0.0f;
         } else if (abs_vel < 3.0f) {
-            float scale = (abs_vel - 0.5f) / 2.5f;
+            float scale = (abs_vel - 0.1f) / 2.9f;
             target_voltage *= scale;
         }
         
@@ -208,10 +214,10 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
         
         float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
         
-        if (dist < 0.08f) {
+        if (dist < 0.05f) {
             target_voltage = 0.0f;
         } else if (dist < 0.15f) {
-            float scale = (dist - 0.08f) / 0.07f;
+            float scale = (dist - 0.05f) / 0.1f;
             target_voltage *= scale;
         }
         
