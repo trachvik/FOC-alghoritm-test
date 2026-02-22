@@ -30,9 +30,9 @@ int main(void)
 	static int loop_count = 0;
 	while (1)
 	{
-		if (loop_count++ == 0) {
-			printk("DEBUG: Entered main loop!\n");
-		}
+		//if (loop_count++ == 0) {
+		//	printk("DEBUG: Entered main loop!\n");
+		//}
 		haptic_loop(&motor, (sensor_t*)&encoder);
 		k_msleep(1);  /* Yield to other threads */
 	}

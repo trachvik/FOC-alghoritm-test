@@ -3,7 +3,10 @@
 #include <zephyr/drivers/spi.h>
 #include <zephyr/kernel.h>
 
-#define NUM_STEPS 0
+#define NUM_STEPS 8
+#define SUPPLY_VOLTAGE 5.0f
+#define HAPTIC_OUTPUT_GAIN 1.55f
+#define HAPTIC_VOLTAGE_LIMIT 3.0f
 
 /* PWM pin definitions for 6PWM BLDC driver */
 /* TODO: Update these pin numbers based on your actual hardware */
@@ -17,7 +20,7 @@
 
 /* Motor parameters */
 #define MOTOR_POLE_PAIRS 11     /* Number of pole pairs */
-#define MOTOR_PHASE_RESISTANCE 0.5f  /* Ohms */
+#define MOTOR_PHASE_RESISTANCE 5.6f  /* Ohms */
 #define MOTOR_KV_RATING 320.0f  /* rpm/V */
 #define MOTOR_INDUCTANCE 0.0001f /* H */
 
@@ -29,6 +32,7 @@ static const struct spi_dt_spec as5048a_spi = SPI_DT_SPEC_GET(AS5048A_NODE, SPI_
 static float start_angle = 0.0f;
 static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
+static float last_voltage = 0.0f;
 
 
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
@@ -55,8 +59,8 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     /* Configure driver parameters */
     driver_6pwm->pwm_frequency = 25000;  /* 25 kHz PWM */
-    driver_6pwm->voltage_power_supply = 5.0f;  /* 5V supply */
-    driver_6pwm->voltage_limit = 5.0f;
+    driver_6pwm->voltage_power_supply = SUPPLY_VOLTAGE;
+    driver_6pwm->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
     driver_6pwm->dead_zone = 0.02f;  /* 2% dead time */
 
     if (bldc_driver_6pwm_init_hw(driver_6pwm) != DRIVER_INIT_OK)
@@ -81,9 +85,9 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     bldc_motor_link_sensor(motor, encoder);
 
     /* Configure motor parameters */
-    motor->voltage_limit = 5.0f;  /* Limit voltage for safety */
+    motor->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
     motor->velocity_limit = 20.0f;  /* rad/s */
-    motor->voltage_sensor_align = 3.0f;
+    //motor->voltage_sensor_align = 3.0f;
 
     if (!bldc_motor_init(motor))
     {
@@ -138,11 +142,11 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
 {
     struct as5048a_device *as5048a = (struct as5048a_device *)encoder;
     uint16_t raw_angle;
-    float target_voltage, last_voltage = 0.0f;
+    float target_voltage;
     float voltage_filter_alpha = 0.8f;
-    static uint64_t last_print = 0;
+    //static uint64_t last_print = 0;
     
-    uint64_t now = k_uptime_get();
+    //uint64_t now = k_uptime_get();
     int num_steps = NUM_STEPS;
     
     /* Read encoder */
@@ -176,11 +180,11 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
     
     /* Debug print */
-    if (now - last_print > 500) {
+    /*if (now - last_print > 500) {
         printk("Angle: %.1f°, Vel: %.2f rad/s\n", 
                angle_rel * 180.0f / 3.14159f, motor->shaft_velocity);
         last_print = now;
-    }
+    }*/
     
     /* Smooth mode */
     if (num_steps == 0) {
@@ -215,7 +219,11 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     }
     
     last_voltage = target_voltage;
+
+    float commanded_voltage = target_voltage * HAPTIC_OUTPUT_GAIN;
+    if (commanded_voltage > motor->voltage_limit) commanded_voltage = motor->voltage_limit;
+    if (commanded_voltage < -motor->voltage_limit) commanded_voltage = -motor->voltage_limit;
     
     /* SEND VOLTAGE AFTER loopFOC */
-    bldc_motor_move(motor, target_voltage);
+    bldc_motor_move(motor, commanded_voltage);
 }
