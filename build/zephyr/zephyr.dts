@@ -19,10 +19,10 @@
 
 	/* node '/aliases' defined in zephyr/dts/common/skeleton.dtsi:15 */
 	aliases {
-		sw0 = &user_button;   /* in zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts:45 */
 		volt-sensor0 = &vref; /* in zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts:46 */
 		volt-sensor1 = &vbat; /* in zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts:47 */
 		led0 = &blue_led;     /* in haptic/app.overlay:16 */
+		sw0 = &user_button;   /* in haptic/app.overlay:17 */
 	};
 
 	/* node '/soc' defined in zephyr/dts/arm/armv7-m.dtsi:6 */
@@ -170,7 +170,7 @@
 				#gpio-cells = < 0x2 >;        /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:164 */
 				reg = < 0x40020000 0x400 >;   /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:165 */
 				clocks = < &rcc 0x30 0x1 >;   /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:166 */
-				phandle = < 0xc >;            /* in haptic/app.overlay:33 */
+				phandle = < 0xc >;            /* in haptic/app.overlay:34 */
 			};
 
 			/* node '/soc/pin-controller@40020000/gpio@40020400' defined in zephyr/dts/arm/st/f4/stm32f4.dtsi:169 */
@@ -264,7 +264,7 @@
 				pinmux = < 0x285 >;            /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:511 */
 				bias-pull-down;                /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:512 */
 				slew-rate = "very-high-speed"; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:513 */
-				phandle = < 0xa >;             /* in haptic/app.overlay:31 */
+				phandle = < 0xa >;             /* in haptic/app.overlay:32 */
 			};
 
 			/* node '/soc/pin-controller@40020000/spi1_mosi_pb5' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:548 */
@@ -272,7 +272,7 @@
 				pinmux = < 0x2a5 >;            /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:549 */
 				bias-pull-down;                /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:550 */
 				slew-rate = "very-high-speed"; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:551 */
-				phandle = < 0xb >;             /* in haptic/app.overlay:31 */
+				phandle = < 0xb >;             /* in haptic/app.overlay:32 */
 			};
 
 			/* node '/soc/pin-controller@40020000/spi1_sck_pa5' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:636 */
@@ -280,43 +280,43 @@
 				pinmux = < 0xa5 >;             /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:637 */
 				bias-pull-down;                /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:638 */
 				slew-rate = "very-high-speed"; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:639 */
-				phandle = < 0x9 >;             /* in haptic/app.overlay:31 */
+				phandle = < 0x9 >;             /* in haptic/app.overlay:32 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim1_ch1_pa8' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:704 */
 			tim1_ch1_pa8: tim1_ch1_pa8 {
 				pinmux = < 0x101 >; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:705 */
-				phandle = < 0x10 >; /* in haptic/app.overlay:51 */
+				phandle = < 0x10 >; /* in haptic/app.overlay:52 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim1_ch2_pa9' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:708 */
 			tim1_ch2_pa9: tim1_ch2_pa9 {
 				pinmux = < 0x121 >; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:709 */
-				phandle = < 0x11 >; /* in haptic/app.overlay:51 */
+				phandle = < 0x11 >; /* in haptic/app.overlay:52 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim1_ch3_pa10' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:712 */
 			tim1_ch3_pa10: tim1_ch3_pa10 {
 				pinmux = < 0x141 >; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:713 */
-				phandle = < 0x12 >; /* in haptic/app.overlay:51 */
+				phandle = < 0x12 >; /* in haptic/app.overlay:52 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim3_ch2_pa7' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:780 */
 			tim3_ch2_pa7: tim3_ch2_pa7 {
 				pinmux = < 0xe2 >;  /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:781 */
-				phandle = < 0x13 >; /* in haptic/app.overlay:61 */
+				phandle = < 0x13 >; /* in haptic/app.overlay:62 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim3_ch3_pb0' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:784 */
 			tim3_ch3_pb0: tim3_ch3_pb0 {
 				pinmux = < 0x202 >; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:785 */
-				phandle = < 0x14 >; /* in haptic/app.overlay:61 */
+				phandle = < 0x14 >; /* in haptic/app.overlay:62 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim3_ch4_pb1' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:788 */
 			tim3_ch4_pb1: tim3_ch4_pb1 {
 				pinmux = < 0x222 >; /* in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:789 */
-				phandle = < 0x15 >; /* in haptic/app.overlay:61 */
+				phandle = < 0x15 >; /* in haptic/app.overlay:62 */
 			};
 
 			/* node '/soc/pin-controller@40020000/tim4_ch1_pb6' defined in modules/hal/stm32/dts/st/f4/stm32f411c(c-e)ux-pinctrl.dtsi:800 */
@@ -468,16 +468,16 @@
 			clocks = < &rcc 0x44 0x1000 >;                               /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:308 */
 			interrupts = < 0x23 0x5 >;                                   /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:309 */
 			st,spi-data-width = "limited-8-16-bit";                      /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:310 */
-			status = "okay";                                             /* in haptic/app.overlay:30 */
-			pinctrl-0 = < &spi1_sck_pa5 &spi1_miso_pb4 &spi1_mosi_pb5 >; /* in haptic/app.overlay:31 */
-			pinctrl-names = "default";                                   /* in haptic/app.overlay:32 */
-			cs-gpios = < &gpioa 0x4 0x1 >;                               /* in haptic/app.overlay:33 */
+			status = "okay";                                             /* in haptic/app.overlay:31 */
+			pinctrl-0 = < &spi1_sck_pa5 &spi1_miso_pb4 &spi1_mosi_pb5 >; /* in haptic/app.overlay:32 */
+			pinctrl-names = "default";                                   /* in haptic/app.overlay:33 */
+			cs-gpios = < &gpioa 0x4 0x1 >;                               /* in haptic/app.overlay:34 */
 
-			/* node '/soc/spi@40013000/as5048a@0' defined in haptic/app.overlay:35 */
+			/* node '/soc/spi@40013000/as5048a@0' defined in haptic/app.overlay:36 */
 			as5048a: as5048a@0 {
-				compatible = "vnd,spi-device";   /* in haptic/app.overlay:36 */
-				reg = < 0x0 >;                   /* in haptic/app.overlay:37 */
-				spi-max-frequency = < 0xf4240 >; /* in haptic/app.overlay:38 */
+				compatible = "vnd,spi-device";   /* in haptic/app.overlay:37 */
+				reg = < 0x0 >;                   /* in haptic/app.overlay:38 */
+				spi-max-frequency = < 0xf4240 >; /* in haptic/app.overlay:39 */
 			};
 		};
 
@@ -495,11 +495,11 @@
 			         < &rcc 0x7 0xff >;                              /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:323 */
 			pinctrl-0 = < &usb_otg_fs_dm_pa11 &usb_otg_fs_dp_pa12 >; /* in zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts:124 */
 			pinctrl-names = "default";                               /* in zephyr/boards/weact/blackpill_f411ce/blackpill_f411ce.dts:125 */
-			status = "okay";                                         /* in haptic/app.overlay:22 */
+			status = "okay";                                         /* in haptic/app.overlay:23 */
 
-			/* node '/soc/usb@50000000/cdc_acm_uart0' defined in haptic/app.overlay:23 */
+			/* node '/soc/usb@50000000/cdc_acm_uart0' defined in haptic/app.overlay:24 */
 			cdc_acm_uart0: cdc_acm_uart0 {
-				compatible = "zephyr,cdc-acm-uart"; /* in haptic/app.overlay:24 */
+				compatible = "zephyr,cdc-acm-uart"; /* in haptic/app.overlay:25 */
 			};
 		};
 
@@ -519,15 +519,15 @@
 			                  "trgcom",
 			                  "cc";         /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:335 */
 			st,prescaler = < 0x0 >;         /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:336 */
-			status = "okay";                /* in haptic/app.overlay:48 */
+			status = "okay";                /* in haptic/app.overlay:49 */
 
 			/* node '/soc/timers@40010000/pwm' defined in zephyr/dts/arm/st/f4/stm32f4.dtsi:339 */
 			pwm_low: pwm {
 				compatible = "st,stm32-pwm";                                /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:340 */
 				#pwm-cells = < 0x3 >;                                       /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:342 */
-				status = "okay";                                            /* in haptic/app.overlay:50 */
-				pinctrl-0 = < &tim1_ch1_pa8 &tim1_ch2_pa9 &tim1_ch3_pa10 >; /* in haptic/app.overlay:51 */
-				pinctrl-names = "default";                                  /* in haptic/app.overlay:52 */
+				status = "okay";                                            /* in haptic/app.overlay:51 */
+				pinctrl-0 = < &tim1_ch1_pa8 &tim1_ch2_pa9 &tim1_ch3_pa10 >; /* in haptic/app.overlay:52 */
+				pinctrl-names = "default";                                  /* in haptic/app.overlay:53 */
 			};
 
 			/* node '/soc/timers@40010000/counter' defined in zephyr/dts/arm/st/f4/stm32f4.dtsi:345 */
@@ -587,15 +587,15 @@
 			interrupts = < 0x1d 0x0 >;      /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:392 */
 			interrupt-names = "global";     /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:393 */
 			st,prescaler = < 0x0 >;         /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:394 */
-			status = "okay";                /* in haptic/app.overlay:58 */
+			status = "okay";                /* in haptic/app.overlay:59 */
 
 			/* node '/soc/timers@40000400/pwm' defined in zephyr/dts/arm/st/f4/stm32f4.dtsi:397 */
 			pwm_high: pwm {
 				compatible = "st,stm32-pwm";                               /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:398 */
 				#pwm-cells = < 0x3 >;                                      /* in zephyr/dts/arm/st/f4/stm32f4.dtsi:400 */
-				status = "okay";                                           /* in haptic/app.overlay:60 */
-				pinctrl-0 = < &tim3_ch2_pa7 &tim3_ch3_pb0 &tim3_ch4_pb1 >; /* in haptic/app.overlay:61 */
-				pinctrl-names = "default";                                 /* in haptic/app.overlay:62 */
+				status = "okay";                                           /* in haptic/app.overlay:61 */
+				pinctrl-0 = < &tim3_ch2_pa7 &tim3_ch3_pb0 &tim3_ch4_pb1 >; /* in haptic/app.overlay:62 */
+				pinctrl-names = "default";                                 /* in haptic/app.overlay:63 */
 			};
 
 			/* node '/soc/timers@40000400/counter' defined in zephyr/dts/arm/st/f4/stm32f4.dtsi:403 */

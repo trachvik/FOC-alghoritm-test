@@ -1,10 +1,12 @@
 #include "haptic.h"
 #include "drivers/as5048a.h"
 #include <zephyr/drivers/spi.h>
+#include <zephyr/drivers/gpio.h>
 #include <zephyr/kernel.h>
+#include <zephyr/devicetree.h>
 #include <math.h>
 
-#define NUM_STEPS 8
+#define NUM_STEPS 0
 #define SUPPLY_VOLTAGE 5.0f
 #define HAPTIC_OUTPUT_GAIN 2.0f
 #define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
@@ -28,12 +30,53 @@
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
 static const struct spi_dt_spec as5048a_spi = SPI_DT_SPEC_GET(AS5048A_NODE, SPI_WORD_SET(16) | SPI_TRANSFER_MSB | SPI_MODE_CPHA, 0);
+static const struct gpio_dt_spec user_button = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0), gpios, {0});
 
 /* Haptic state variables */
 static float start_angle = 0.0f;
 static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
 static float last_voltage = 0.0f;
+static int step_count = 0;
+
+int haptic_update_num_steps_from_button(void)
+{
+    static bool initialized = false;
+    static bool last_pressed = false;
+    static int current_num_steps = NUM_STEPS;
+    static int64_t last_change_ms = 0;
+
+    if (!initialized) {
+        if (user_button.port != NULL && gpio_is_ready_dt(&user_button)) {
+            gpio_pin_configure_dt(&user_button, GPIO_INPUT);
+            int init_state = gpio_pin_get_dt(&user_button);
+            last_pressed = (init_state > 0);
+            last_change_ms = k_uptime_get();
+        }
+        initialized = true;
+    }
+
+    if (user_button.port == NULL || !gpio_is_ready_dt(&user_button)) {
+        return current_num_steps;
+    }
+
+    bool pressed = gpio_pin_get_dt(&user_button) > 0;
+    int64_t now_ms = k_uptime_get();
+
+    if (pressed && !last_pressed && (now_ms - last_change_ms) > 180) {
+        if (current_num_steps == 0) {
+            current_num_steps = 20;
+        } else if (current_num_steps <= 8) {
+            current_num_steps = 0;
+        } else {
+            current_num_steps -= 4;
+        }
+        last_change_ms = now_ms;
+    }
+
+    last_pressed = pressed;
+    return current_num_steps;
+}
 
 
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
@@ -153,7 +196,7 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     //static uint64_t last_print = 0;
     
     //uint64_t now = k_uptime_get();
-    int num_steps = NUM_STEPS;
+    int num_steps = haptic_update_num_steps_from_button();
     
     /* Read encoder */
     if (as5048a_read_raw(as5048a, &raw_angle) != 0) {
@@ -166,15 +209,16 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     /* UPDATE SENSOR and RUN FOC FIRST, then MOVE */
     bldc_motor_loop_foc(motor);
     
-    /* Handle num_steps change with step persistence */
-    if (num_steps != num_steps_old) {
-        step_count_buffer = (int)((num_steps_old > 0) ? ((float)num_steps_old / _2PI) * (current_angle - start_angle) : 0);
-        start_angle = current_angle;
-        num_steps_old = num_steps;
-    }
-    
     /* Calculate relative angle */
     float angle_rel = current_angle - start_angle;
+
+    // Preserve position when num_steps is changed
+    if (num_steps != num_steps_old) {
+        step_count_buffer = step_count;
+        start_angle = current_angle;
+        num_steps_old = num_steps;
+        angle_rel = 0.0f;
+    }
     
     /* Normalize angle to [0, 2π] */
     while (angle_rel > _2PI) angle_rel -= _2PI;
@@ -182,6 +226,8 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     
     /* Calculate step position */
     float step_size = (num_steps > 0) ? (_2PI / (float)num_steps) : _2PI;
+    float step_count_f = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0.0f;
+    step_count = (int)roundf(step_count_f) + step_count_buffer;
     int step_count_abs = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0;
     float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
     

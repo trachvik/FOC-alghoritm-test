@@ -2059,6 +2059,7 @@ zephyr_udc0: &usbotg_fs {
 
  aliases {
   led0 = &blue_led;
+  sw0 = &user_button;
  };
 };
 
