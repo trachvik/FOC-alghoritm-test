@@ -8,7 +8,7 @@
 
 #define NUM_STEPS 0
 #define SUPPLY_VOLTAGE 5.0f
-#define HAPTIC_OUTPUT_GAIN 2.0f
+//#define HAPTIC_OUTPUT_GAIN 2.0f
 #define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
 
 /* PWM pin definitions for 6PWM BLDC driver */
@@ -267,15 +267,16 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
             target_voltage *= scale;
         }
         
-        target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage;
+        float scaling_factor = 0.3f; // for smoother detents and less noise
+        target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
     }
     
     last_voltage = target_voltage;
 
-    float commanded_voltage = target_voltage * HAPTIC_OUTPUT_GAIN;
-    if (commanded_voltage > motor->voltage_limit) commanded_voltage = motor->voltage_limit;
-    if (commanded_voltage < -motor->voltage_limit) commanded_voltage = -motor->voltage_limit;
+   // float commanded_voltage = target_voltage * HAPTIC_OUTPUT_GAIN;
+    //if (commanded_voltage > motor->voltage_limit) commanded_voltage = motor->voltage_limit;
+    //if (commanded_voltage < -motor->voltage_limit) commanded_voltage = -motor->voltage_limit;
     
     /* SEND VOLTAGE AFTER loopFOC */
-    bldc_motor_move(motor, commanded_voltage);
+    bldc_motor_move(motor, target_voltage);
 }
