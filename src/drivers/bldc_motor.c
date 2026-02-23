@@ -474,20 +474,23 @@ void bldc_motor_set_phase_voltage(bldc_motor_t *motor, float uq, float ud, float
 {
     if (motor == NULL || motor->driver == NULL) return;
     
-    /* Inverse Park transform */
+    /* Calculate sin and cos for Park transform */
     float ca = cosf(angle_el);
     float sa = sinf(angle_el);
     
-    float u_alpha = ud * ca - uq * sa;
-    float u_beta = ud * sa + uq * ca;
+    /* Inverse Park transform using ARM CMSIS DSP */
+    float u_alpha, u_beta;
+    arm_inv_park_f32(ud, uq, &u_alpha, &u_beta, sa, ca);
     
     motor->u_alpha = u_alpha;
     motor->u_beta = u_beta;
     
-    /* Inverse Clarke transform (simplified for sine PWM) */
-    motor->ua = u_alpha;
-    motor->ub = -0.5f * u_alpha + 0.866025404f * u_beta;  /* sqrt(3)/2 */
-    motor->uc = -0.5f * u_alpha - 0.866025404f * u_beta;
+    /* Inverse Clarke transform using ARM CMSIS DSP */
+    float ua, ub;
+    arm_inv_clarke_f32(u_alpha, u_beta, &ua, &ub);
+    motor->ua = ua;
+    motor->ub = ub;
+    motor->uc = -(ua + ub);  /* Ia + Ib + Ic = 0 */
     
     /* Center around voltage_limit/2 if modulation_centered */
     if (motor->modulation_centered) {
