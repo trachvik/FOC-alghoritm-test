@@ -5,6 +5,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/devicetree.h>
 #include <math.h>
+#include <arm_math.h>
 
 #define NUM_STEPS 0
 #define SUPPLY_VOLTAGE 5.0f
@@ -262,7 +263,7 @@ void haptic_loop(bldc_motor_t *motor)
         bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
                                          PHASE_ON, PHASE_ON, PHASE_ON);
         float norm_pos = between_steps_pos / step_size;
-        target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos);
+        target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos); // does not work well with arm_sin_f32 for some reason, maybe due to precision issues, so using math.h sinf instead
         
         float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
         

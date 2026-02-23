@@ -2,6 +2,7 @@
 #include "bldc_driver_6pwm.h"
 #include <string.h>
 #include <math.h>
+#include <arm_math.h>
 #include <zephyr/kernel.h>
 
 /* Helper macros */
@@ -254,6 +255,7 @@ float lowpass_filter_operator(lowpass_filter_t *lpf, float x)
  */
 static float normalize_angle(float angle)
 {
+    /* fmodf not in CMSIS DSP, keep standard implementation */
     float a = fmodf(angle, _2PI);
     return a >= 0.0f ? a : (a + _2PI);
 }

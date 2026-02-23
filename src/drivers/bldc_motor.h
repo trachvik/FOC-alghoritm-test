@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <arm_math.h>
 
 /* Forward declarations */
 typedef struct bldc_driver bldc_driver_t;
@@ -11,14 +12,15 @@ typedef struct sensor sensor_t;
 
 /* Constants */
 #define NOT_SET -12345.0f
-#define _HIGH_IMPEDANCE 0 // TO DO - do I need this?
+#define _HIGH_IMPEDANCE 0
 
-/* Math constants */
-#define _PI 3.14159265359f
-#define _PI_2 1.57079632679f
-#define _PI_3 1.0471975512f
-#define _2PI 6.28318530718f
-#define _3PI_2 4.71238898038f
+/* Math constants - derived from ARM CMSIS DSP PI constant */
+/* All values computed from ARM PI for consistency and optimization */
+#define _PI                PI             /* ARM CMSIS DSP PI = 3.14159265358979f */
+#define _PI_2              (PI / 2.0f)    /* PI/2 */
+#define _PI_3              (PI / 3.0f)    /* PI/3 */
+#define _2PI               (2.0f * PI)    /* 2*PI */
+#define _3PI_2             (3.0f * PI / 2.0f)  /* 3*PI/2 */
 #define MIN_ANGLE_DETECT_MOVEMENT (_2PI/101.0f)
 
 /* Direction enum */
