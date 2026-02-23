@@ -27,13 +27,8 @@ int main(void)
 
 	haptic_init(&motor, (bldc_driver_t*)&driver, (sensor_t*)&encoder);
 
-	static int loop_count = 0;
-	while (1)
-	{
-		//if (loop_count++ == 0) {
-		//	printk("DEBUG: Entered main loop!\n");
-		//}
-		haptic_loop(&motor);
-		k_msleep(1);  /* Yield to other threads */
+	/* haptic_loop is now driven by a 10 kHz timer thread in haptic.c */
+	while (1) {
+		k_sleep(K_FOREVER);
 	}
 }

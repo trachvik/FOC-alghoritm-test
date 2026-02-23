@@ -48,6 +48,31 @@ static int num_steps_old = NUM_STEPS;
 static float last_voltage = 0.0f;
 static int step_count = 0;
 
+/* FOC control loop thread - triggered by k_timer at 10 kHz */
+static bldc_motor_t *g_motor_ptr = NULL;
+static K_SEM_DEFINE(haptic_sem, 0, 1);
+static struct k_timer haptic_timer;
+
+#define HAPTIC_THREAD_STACK_SIZE 2048
+#define HAPTIC_THREAD_PRIORITY   0       /* Highest preemptible priority */
+static K_THREAD_STACK_DEFINE(haptic_stack, HAPTIC_THREAD_STACK_SIZE);
+static struct k_thread haptic_thread_data;
+
+static void haptic_timer_cb(struct k_timer *timer)
+{
+    ARG_UNUSED(timer);
+    k_sem_give(&haptic_sem);
+}
+
+static void haptic_thread_fn(void *p1, void *p2, void *p3)
+{
+    ARG_UNUSED(p1); ARG_UNUSED(p2); ARG_UNUSED(p3);
+    while (1) {
+        k_sem_take(&haptic_sem, K_FOREVER);
+        haptic_loop(g_motor_ptr);
+    }
+}
+
 int haptic_update_num_steps_from_button(void)
 {
     static bool initialized = false;
@@ -193,6 +218,17 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     printk("Starting motor control in 2 seconds...\n");
     k_msleep(2000);
+
+    /* Start 10 kHz (100 µs) FOC control loop */
+    g_motor_ptr = motor;
+    k_timer_init(&haptic_timer, haptic_timer_cb, NULL);
+    k_thread_create(&haptic_thread_data, haptic_stack,
+                    K_THREAD_STACK_SIZEOF(haptic_stack),
+                    haptic_thread_fn, NULL, NULL, NULL,
+                    HAPTIC_THREAD_PRIORITY, 0, K_NO_WAIT);
+    k_thread_name_set(&haptic_thread_data, "haptic_foc");
+    k_timer_start(&haptic_timer, K_USEC(100), K_USEC(100));
+
     return 0;
 }
 
