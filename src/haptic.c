@@ -160,7 +160,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("================================================\n\n");
 
     /* Set motor to torque control mode (voltage) */
-    motor->controller = TORQUE;
+    //motor->controller = TORQUE;
     motor->target = 0.0f;  /* Start with zero torque */
 
     /* Settle motor at zero torque after calibration */

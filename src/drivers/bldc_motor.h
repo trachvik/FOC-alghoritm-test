@@ -7,11 +7,11 @@
 /* Forward declarations */
 typedef struct bldc_driver bldc_driver_t;
 typedef struct sensor sensor_t;
-typedef struct current_sense current_sense_t;
+//typedef struct current_sense current_sense_t;
 
 /* Constants */
 #define NOT_SET -12345.0f
-#define _HIGH_IMPEDANCE 0
+#define _HIGH_IMPEDANCE 0 // TO DO - do I need this?
 
 /* Math constants */
 #define _PI 3.14159265359f
@@ -29,22 +29,22 @@ typedef enum {
 } direction_t;
 
 /* Motion control type */
-typedef enum {
+/*typedef enum {
     TORQUE = 0x00,
     VELOCITY = 0x01,
     ANGLE = 0x02,
     VELOCITY_OPENLOOP = 0x03,
     ANGLE_OPENLOOP = 0x04
-} motion_control_type_t;
+} motion_control_type_t;*/
 
-/* Torque control type */
+/* Torque control type */ // TO DO - simplify
 typedef enum {
     VOLTAGE = 0x00,
     DC_CURRENT = 0x01,
     FOC_CURRENT = 0x02
 } torque_control_type_t;
 
-/* FOC modulation type */
+/* FOC modulation type */ // TO DO - simplify
 typedef enum {
     SINE_PWM = 0x00,
     SPACE_VECTOR_PWM = 0x01,
@@ -70,7 +70,7 @@ typedef struct {
     float q;
 } dq_voltage_t;
 
-/* DQ current structure */
+/* DQ current structure */ // TO DO - do I need this?
 typedef struct {
     float d;
     float q;
@@ -144,8 +144,8 @@ typedef struct {
     int8_t modulation_centered; /* Centered modulation flag */
     
     /* Control configuration */
-    torque_control_type_t torque_controller;
-    motion_control_type_t controller;
+    torque_control_type_t torque_controller; // TO DO keep voltage AND current control for now, but maybe simplify later
+    //motion_control_type_t controller;
     
     /* Controllers and filters */
     pid_controller_t pid_current_q;
@@ -174,10 +174,10 @@ typedef struct {
     /* Hardware links */
     bldc_driver_t *driver;
     sensor_t *sensor;
-    current_sense_t *current_sense;
+    //current_sense_t *current_sense;
     
     /* Open loop variables */
-    long open_loop_timestamp;
+    //long open_loop_timestamp;
     
 } bldc_motor_t;
 
@@ -214,7 +214,7 @@ void bldc_motor_link_sensor(bldc_motor_t *motor, sensor_t *sensor);
  * @param motor Pointer to motor structure
  * @param current_sense Pointer to current sense structure
  */
-void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *current_sense);
+//void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *current_sense);
 
 /**
  * Initialize motor hardware
@@ -285,7 +285,7 @@ float bldc_motor_shaft_angle(bldc_motor_t *motor);
  * @param motor Pointer to motor structure
  * @return Shaft velocity in rad/s
  */
-float bldc_motor_shaft_velocity(bldc_motor_t *motor);
+//float bldc_motor_shaft_velocity(bldc_motor_t *motor); // TO DO - not im
 
 /**
  * Calculate electrical angle
@@ -298,10 +298,10 @@ float bldc_motor_electrical_angle(bldc_motor_t *motor);
 /* PID controller functions */
 void pid_controller_init(pid_controller_t *pid, float p, float i, float d, float ramp, float limit);
 float pid_controller_operator(pid_controller_t *pid, float error);
-void pid_controller_reset(pid_controller_t *pid);
+void pid_controller_reset(pid_controller_t *pid);   // TO DO is this needed?
 
 /* Low pass filter functions */
 void lowpass_filter_init(lowpass_filter_t *lpf, float tf);
-float lowpass_filter_operator(lowpass_filter_t *lpf, float x);
+//float lowpass_filter_operator(lowpass_filter_t *lpf, float x);  // TO DO - do I need this?
 
 #endif /* BLDC_MOTOR_H */
