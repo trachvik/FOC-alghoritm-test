@@ -633,10 +633,8 @@ void bldc_motor_loop_foc(bldc_motor_t *motor)
 {
     if (motor == NULL) return;
     
-    /* Update sensor - do this even in open-loop to keep track of rotations */
-    if (motor->sensor != NULL) {
-        sensor_update(motor->sensor);
-    }
+    /* Sensor is read (and cached) externally before calling this function.
+     * sensor_update() must be called once per cycle by the caller. */
     
     /* If open-loop or disabled, do nothing */
     /*if (motor->controller == VELOCITY_OPENLOOP || 

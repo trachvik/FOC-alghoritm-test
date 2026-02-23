@@ -7,6 +7,14 @@
 #include <math.h>
 #include <arm_math.h>
 
+/* Sensor abstraction - implemented in as5048a.c */
+extern void sensor_update(sensor_t *sensor);
+extern float sensor_get_angle(sensor_t *sensor);
+
+/* Sensor abstraction - implemented in as5048a.c */
+extern void sensor_update(sensor_t *sensor);
+extern float sensor_get_angle(sensor_t *sensor);
+
 #define NUM_STEPS 0
 #define SUPPLY_VOLTAGE 5.0f
 //#define HAPTIC_OUTPUT_GAIN 2.0f
@@ -190,22 +198,14 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
 void haptic_loop(bldc_motor_t *motor)
 {
-    struct as5048a_device *as5048a = (struct as5048a_device *)motor->sensor;
-    uint16_t raw_angle;
     float target_voltage;
     float voltage_filter_alpha = 0.8f;
-    //static uint64_t last_print = 0;
-    
-    //uint64_t now = k_uptime_get();
+
     int num_steps = haptic_update_num_steps_from_button();
     
-    /* Read encoder */
-    if (as5048a_read_raw(as5048a, &raw_angle) != 0) {
-        return;
-    }
-    
-    /* Convert raw angle to radians (0 to 2π) */
-    float current_angle = ((float)raw_angle / 16384.0f) * _2PI;
+    /* Read encoder via sensor abstraction linked in motor struct */
+    sensor_update(motor->sensor);
+    float current_angle = sensor_get_angle(motor->sensor);
     
     /* Calculate relative angle */
     float angle_rel = current_angle - start_angle;

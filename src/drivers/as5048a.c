@@ -114,20 +114,20 @@ int as5048a_read_angle_rad(struct as5048a_device *dev, float *angle_rad)
 /* Global pointer to AS5048A device - set from main */
 extern struct as5048a_device *g_as5048a;
 
+/* Cached angle value - updated once per control cycle by sensor_update() */
+static float g_cached_angle_rad = 0.0f;
+
 void sensor_update(sensor_t *sensor)
 {
-	/* AS5048A is read on-demand, no update needed */
+	/* Read and cache the current angle - call once per control cycle */
+	if (g_as5048a == NULL) return;
+	as5048a_read_angle_rad(g_as5048a, &g_cached_angle_rad);
 }
 
 float sensor_get_angle(sensor_t *sensor)
 {
-	if (g_as5048a == NULL) return 0.0f;
-	
-	float angle_rad = 0.0f;
-	if (as5048a_read_angle_rad(g_as5048a, &angle_rad) == 0) {
-		return angle_rad;
-	}
-	return 0.0f;
+	/* Return cached value - avoids multiple SPI reads per cycle */
+	return g_cached_angle_rad;
 }
 
 float sensor_get_velocity(sensor_t *sensor)
