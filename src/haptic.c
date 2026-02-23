@@ -187,9 +187,9 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     return 0;
 }
 
-void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
+void haptic_loop(bldc_motor_t *motor)
 {
-    struct as5048a_device *as5048a = (struct as5048a_device *)encoder;
+    struct as5048a_device *as5048a = (struct as5048a_device *)motor->sensor;
     uint16_t raw_angle;
     float target_voltage;
     float voltage_filter_alpha = 0.8f;
@@ -205,9 +205,6 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     
     /* Convert raw angle to radians (0 to 2π) */
     float current_angle = ((float)raw_angle / 16384.0f) * _2PI;
-    
-    /* UPDATE SENSOR and RUN FOC FIRST, then MOVE */
-    bldc_motor_loop_foc(motor);
     
     /* Calculate relative angle */
     float angle_rel = current_angle - start_angle;
@@ -240,7 +237,7 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     
     /* Smooth mode */
     if (num_steps == 0) {
-        float damping = 0.5f;
+        /*float damping = 0.5f;
         target_voltage = -damping * motor->shaft_velocity;
         
         float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
@@ -251,10 +248,19 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
             target_voltage *= scale;
         }
         
-        target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;
+        target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;*/
+        // passive braking: short all three phases to low side
+        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                         PHASE_LO, PHASE_LO, PHASE_LO);
+        bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
+        last_voltage = 0.0f;
+
     }
     /* Detent mode */
     else {
+        bldc_motor_loop_foc(motor);
+        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                         PHASE_ON, PHASE_ON, PHASE_ON);
         float norm_pos = between_steps_pos / step_size;
         target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos);
         
@@ -269,7 +275,7 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
         
         float scaling_factor = 0.3f; // for smoother detents and less noise
         target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
-    }
+    
     
     last_voltage = target_voltage;
 
@@ -279,4 +285,5 @@ void haptic_loop(bldc_motor_t *motor, sensor_t *encoder)
     
     /* SEND VOLTAGE AFTER loopFOC */
     bldc_motor_move(motor, target_voltage);
+    }
 }

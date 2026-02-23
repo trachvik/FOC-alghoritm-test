@@ -33,7 +33,7 @@ int main(void)
 		//if (loop_count++ == 0) {
 		//	printk("DEBUG: Entered main loop!\n");
 		//}
-		haptic_loop(&motor, (sensor_t*)&encoder);
+		haptic_loop(&motor);
 		k_msleep(1);  /* Yield to other threads */
 	}
 }

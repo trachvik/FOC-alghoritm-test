@@ -7,7 +7,7 @@
 #include "drivers/bldc_driver_6pwm.h"
 
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder);
-void haptic_loop(bldc_motor_t *motor, sensor_t *encoder);
+void haptic_loop(bldc_motor_t *motor);
 int haptic_update_num_steps_from_button(void);
 
 
