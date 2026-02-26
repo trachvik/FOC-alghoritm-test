@@ -20,6 +20,18 @@ extern float sensor_get_angle(sensor_t *sensor);
 //#define HAPTIC_OUTPUT_GAIN 2.0f
 #define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
 
+/* Smooth-mode hybrid resistance tuning */
+#define SMOOTH_RESIST_LEVEL              0.55f
+#define SMOOTH_ACTIVE_VOLT_MAX           0.90f
+#define SMOOTH_ACTIVE_VEL_DEADBAND       0.25f
+#define SMOOTH_BLEND_VEL_LOW             2.0f
+#define SMOOTH_BLEND_VEL_HIGH            12.0f
+#define SMOOTH_PASSIVE_FULL_EFFECT_VEL   18.0f
+#define SMOOTH_CHOPPER_PERIOD_TICKS      40U    /* 10kHz loop => 4ms period */
+#define SMOOTH_PASSIVE_DUTY_MIN          0.35f
+#define SMOOTH_PASSIVE_DUTY_MAX          0.95f
+#define SMOOTH_ACTIVE_VOLT_MIN           0.12f
+
 /* PWM pin definitions for 6PWM BLDC driver */
 /* TODO: Update these pin numbers based on your actual hardware */
 #define PWM_AH_PIN  0   /* Phase A high-side */
@@ -47,6 +59,14 @@ static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
 static float last_voltage = 0.0f;
 static int step_count = 0;
+static uint16_t smooth_chopper_tick = 0;
+
+static float clampf_local(float x, float min_val, float max_val)
+{
+    if (x < min_val) return min_val;
+    if (x > max_val) return max_val;
+    return x;
+}
 
 /* FOC control loop thread - triggered by k_timer at 10 kHz */
 static bldc_motor_t *g_motor_ptr = NULL;
@@ -216,6 +236,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     step_count_buffer = 0;
     num_steps_old = NUM_STEPS;
 
+
     printk("Starting motor control in 2 seconds...\n");
     k_msleep(2000);
 
@@ -234,7 +255,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
 void haptic_loop(bldc_motor_t *motor)
 {
-    float target_voltage;
+    float target_voltage = 0.0f;
     float voltage_filter_alpha = 0.8f;
 
     int num_steps = haptic_update_num_steps_from_button();
@@ -274,23 +295,68 @@ void haptic_loop(bldc_motor_t *motor)
     
     /* Smooth mode */
     if (num_steps == 0) {
-        /*float damping = 0.5f;
-        target_voltage = -damping * motor->shaft_velocity;
-        
-        float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
-        if (abs_vel < 0.1f) {
-            target_voltage = 0.0f;
-        } else if (abs_vel < 3.0f) {
-            float scale = (abs_vel - 0.1f) / 2.9f;
-            target_voltage *= scale;
+        float vel = motor->shaft_velocity;
+        float abs_vel = (vel < 0.0f) ? -vel : vel;
+
+        /* Blend passive vs active control by speed:
+         * - high speed: mostly passive (short/off PWM chopper)
+         * - low speed: active anti-torque to keep resistance more constant */
+        float passive_weight = clampf_local(
+            (abs_vel - SMOOTH_BLEND_VEL_LOW) / (SMOOTH_BLEND_VEL_HIGH - SMOOTH_BLEND_VEL_LOW),
+            0.0f, 1.0f);
+        passive_weight = 0.25f + 0.75f * passive_weight;
+        float active_weight = 1.0f - passive_weight;
+
+        /* Passive brake duty calculation with guaranteed minimum shorting */
+        float passive_effect = abs_vel / SMOOTH_PASSIVE_FULL_EFFECT_VEL;
+        passive_effect = clampf_local(passive_effect, 0.05f, 1.0f);
+        float passive_duty = (SMOOTH_RESIST_LEVEL / passive_effect) * passive_weight;
+        passive_duty = clampf_local(passive_duty, SMOOTH_PASSIVE_DUTY_MIN, SMOOTH_PASSIVE_DUTY_MAX);
+
+        uint16_t on_ticks = (uint16_t)(passive_duty * (float)SMOOTH_CHOPPER_PERIOD_TICKS);
+        bool passive_on = (smooth_chopper_tick < on_ticks);
+        smooth_chopper_tick++;
+        if (smooth_chopper_tick >= SMOOTH_CHOPPER_PERIOD_TICKS) {
+            smooth_chopper_tick = 0;
         }
-        
-        target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;*/
-        // passive braking: short all three phases to low side
+
+        /* Active low-speed compensation */
+        float active_voltage = 0.0f;
+        if (active_weight > 0.01f && abs_vel > SMOOTH_ACTIVE_VEL_DEADBAND) {
+            float sign = (vel > 0.0f) ? -1.0f : 1.0f; /* oppose motion */
+            float low_speed_boost = 1.0f - clampf_local(abs_vel / SMOOTH_BLEND_VEL_LOW, 0.0f, 1.0f);
+            active_voltage = sign * SMOOTH_ACTIVE_VOLT_MAX * SMOOTH_RESIST_LEVEL * active_weight *
+                             (1.0f + 0.4f * low_speed_boost);
+            if (active_voltage > 0.0f && active_voltage < SMOOTH_ACTIVE_VOLT_MIN) {
+                active_voltage = SMOOTH_ACTIVE_VOLT_MIN;
+            } else if (active_voltage < 0.0f && active_voltage > -SMOOTH_ACTIVE_VOLT_MIN) {
+                active_voltage = -SMOOTH_ACTIVE_VOLT_MIN;
+            }
+        }
+
+        if (passive_on) {
+            bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                             PHASE_LO, PHASE_LO, PHASE_LO);
+            bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
+            last_voltage = 0.0f;
+            return;
+        }
+
+        if (active_voltage > 0.001f || active_voltage < -0.001f) {
+            bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                             PHASE_ON, PHASE_ON, PHASE_ON);
+            bldc_motor_loop_foc(motor);
+            bldc_motor_move(motor, active_voltage);
+            last_voltage = active_voltage;
+            return;
+        }
+
         bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                         PHASE_LO, PHASE_LO, PHASE_LO);
+                                         PHASE_OFF, PHASE_OFF, PHASE_OFF);
         bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
         last_voltage = 0.0f;
+        return;
+
 
     }
     /* Detent mode */
@@ -312,6 +378,7 @@ void haptic_loop(bldc_motor_t *motor)
         
         float scaling_factor = 0.3f; // for smoother detents and less noise
         target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
+    }
     
     
     last_voltage = target_voltage;
@@ -322,5 +389,5 @@ void haptic_loop(bldc_motor_t *motor)
     
     /* SEND VOLTAGE AFTER loopFOC */
     bldc_motor_move(motor, target_voltage);
-    }
+    
 }

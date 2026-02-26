@@ -56,6 +56,6 @@ cmake:
     zephyr-base: '/home/viktor/zephyr-standalone/zephyrproject/zephyr'
 version: '0.1.0'
 west:
-  command: '/home/viktor/.local/bin/west build -b blackpill_f411ce -p auto'
+  command: '/home/viktor/.local/bin/west build -d build -b blackpill_f411ce --pristine=always .'
   topdir: '/home/viktor/zephyr-standalone/zephyrproject'
   version: '1.5.0'
