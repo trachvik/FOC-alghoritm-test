@@ -102,11 +102,11 @@ const struct _isr_table_entry __sw_isr_table _sw_isr_table[86] = {
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 3 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 4 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 5 */
-	{(const void *)0x80104d3, (ISR)0x800575d}, /* 6 */
-	{(const void *)0x80104d1, (ISR)0x800575d}, /* 7 */
-	{(const void *)0x80104cf, (ISR)0x800575d}, /* 8 */
-	{(const void *)0x80104cd, (ISR)0x800575d}, /* 9 */
-	{(const void *)0x80104cb, (ISR)0x800575d}, /* 10 */
+	{(const void *)0x80104b3, (ISR)0x800573d}, /* 6 */
+	{(const void *)0x80104b1, (ISR)0x800573d}, /* 7 */
+	{(const void *)0x80104af, (ISR)0x800573d}, /* 8 */
+	{(const void *)0x80104ad, (ISR)0x800573d}, /* 9 */
+	{(const void *)0x80104ab, (ISR)0x800573d}, /* 10 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 11 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 12 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 13 */
@@ -119,7 +119,7 @@ const struct _isr_table_entry __sw_isr_table _sw_isr_table[86] = {
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 20 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 21 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 22 */
-	{(const void *)0x80104c9, (ISR)0x800575d}, /* 23 */
+	{(const void *)0x80104a9, (ISR)0x800573d}, /* 23 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 24 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 25 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 26 */
@@ -131,12 +131,12 @@ const struct _isr_table_entry __sw_isr_table _sw_isr_table[86] = {
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 32 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 33 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 34 */
-	{(const void *)0x800e69c, (ISR)0x800d193}, /* 35 */
+	{(const void *)0x800e67c, (ISR)0x800d173}, /* 35 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 36 */
-	{(const void *)0x800e62c, (ISR)0x800cd6f}, /* 37 */
+	{(const void *)0x800e60c, (ISR)0x800cd4f}, /* 37 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 38 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 39 */
-	{(const void *)0x80104c7, (ISR)0x800575d}, /* 40 */
+	{(const void *)0x80104a7, (ISR)0x800573d}, /* 40 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 41 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 42 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 43 */
@@ -163,7 +163,7 @@ const struct _isr_table_entry __sw_isr_table _sw_isr_table[86] = {
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 64 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 65 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 66 */
-	{(const void *)0x0, (ISR)0x80058f1}, /* 67 */
+	{(const void *)0x0, (ISR)0x80058d1}, /* 67 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 68 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 69 */
 	{(const void *)0x0, (ISR)z_irq_spurious}, /* 70 */

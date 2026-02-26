@@ -23,14 +23,19 @@ extern float sensor_get_angle(sensor_t *sensor);
 /* Smooth-mode hybrid resistance tuning */
 #define SMOOTH_RESIST_LEVEL              0.55f
 #define SMOOTH_ACTIVE_VOLT_MAX           0.90f
-#define SMOOTH_ACTIVE_VEL_DEADBAND       0.25f
+#define SMOOTH_ACTIVE_VEL_DEADBAND       0.08f
+#define SMOOTH_ACTIVE_VEL_RANGE          5.0f
 #define SMOOTH_BLEND_VEL_LOW             2.0f
 #define SMOOTH_BLEND_VEL_HIGH            12.0f
 #define SMOOTH_PASSIVE_FULL_EFFECT_VEL   18.0f
-#define SMOOTH_CHOPPER_PERIOD_TICKS      40U    /* 10kHz loop => 4ms period */
 #define SMOOTH_PASSIVE_DUTY_MIN          0.35f
 #define SMOOTH_PASSIVE_DUTY_MAX          0.95f
 #define SMOOTH_ACTIVE_VOLT_MIN           0.12f
+#define SMOOTH_ACTIVE_COULOMB_VOLT       0.22f
+#define SMOOTH_ACTIVE_VISCOUS_GAIN       0.08f
+#define SMOOTH_DESIRED_DRAG_PROXY        1.9f
+#define SMOOTH_PASSIVE_VEL_FLOOR         0.35f
+#define SMOOTH_ACTIVE_DEFICIT_GAIN       0.22f
 
 /* PWM pin definitions for 6PWM BLDC driver */
 /* TODO: Update these pin numbers based on your actual hardware */
@@ -59,7 +64,7 @@ static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
 static float last_voltage = 0.0f;
 static int step_count = 0;
-static uint16_t smooth_chopper_tick = 0;
+static float smooth_passive_duty_lp = 0.0f;
 
 static float clampf_local(float x, float min_val, float max_val)
 {
@@ -298,50 +303,48 @@ void haptic_loop(bldc_motor_t *motor)
         float vel = motor->shaft_velocity;
         float abs_vel = (vel < 0.0f) ? -vel : vel;
 
-        /* Blend passive vs active control by speed:
-         * - high speed: mostly passive (short/off PWM chopper)
-         * - low speed: active anti-torque to keep resistance more constant */
-        float passive_weight = clampf_local(
-            (abs_vel - SMOOTH_BLEND_VEL_LOW) / (SMOOTH_BLEND_VEL_HIGH - SMOOTH_BLEND_VEL_LOW),
-            0.0f, 1.0f);
-        passive_weight = 0.25f + 0.75f * passive_weight;
-        float active_weight = 1.0f - passive_weight;
-
-        /* Passive brake duty calculation with guaranteed minimum shorting */
-        float passive_effect = abs_vel / SMOOTH_PASSIVE_FULL_EFFECT_VEL;
-        passive_effect = clampf_local(passive_effect, 0.05f, 1.0f);
-        float passive_duty = (SMOOTH_RESIST_LEVEL / passive_effect) * passive_weight;
+        /* Constant-resistance passive target: duty * omega ~= const */
+        float passive_duty = (SMOOTH_RESIST_LEVEL * SMOOTH_DESIRED_DRAG_PROXY) /
+                             ((abs_vel > SMOOTH_PASSIVE_VEL_FLOOR) ? abs_vel : SMOOTH_PASSIVE_VEL_FLOOR);
         passive_duty = clampf_local(passive_duty, SMOOTH_PASSIVE_DUTY_MIN, SMOOTH_PASSIVE_DUTY_MAX);
 
-        uint16_t on_ticks = (uint16_t)(passive_duty * (float)SMOOTH_CHOPPER_PERIOD_TICKS);
-        bool passive_on = (smooth_chopper_tick < on_ticks);
-        smooth_chopper_tick++;
-        if (smooth_chopper_tick >= SMOOTH_CHOPPER_PERIOD_TICKS) {
-            smooth_chopper_tick = 0;
-        }
+        /* Smooth duty transitions to reduce buzz during speed changes */
+        smooth_passive_duty_lp = 0.92f * smooth_passive_duty_lp + 0.08f * passive_duty;
+        float passive_duty_cmd = clampf_local(smooth_passive_duty_lp, SMOOTH_PASSIVE_DUTY_MIN, SMOOTH_PASSIVE_DUTY_MAX);
 
-        /* Active low-speed compensation */
+        /* Active low-speed compensation fills only missing drag at low speed */
         float active_voltage = 0.0f;
-        if (active_weight > 0.01f && abs_vel > SMOOTH_ACTIVE_VEL_DEADBAND) {
+        if (abs_vel > SMOOTH_ACTIVE_VEL_DEADBAND && abs_vel < SMOOTH_ACTIVE_VEL_RANGE) {
             float sign = (vel > 0.0f) ? -1.0f : 1.0f; /* oppose motion */
-            float low_speed_boost = 1.0f - clampf_local(abs_vel / SMOOTH_BLEND_VEL_LOW, 0.0f, 1.0f);
-            active_voltage = sign * SMOOTH_ACTIVE_VOLT_MAX * SMOOTH_RESIST_LEVEL * active_weight *
-                             (1.0f + 0.4f * low_speed_boost);
-            if (active_voltage > 0.0f && active_voltage < SMOOTH_ACTIVE_VOLT_MIN) {
-                active_voltage = SMOOTH_ACTIVE_VOLT_MIN;
-            } else if (active_voltage < 0.0f && active_voltage > -SMOOTH_ACTIVE_VOLT_MIN) {
-                active_voltage = -SMOOTH_ACTIVE_VOLT_MIN;
+            float desired_drag = SMOOTH_RESIST_LEVEL * SMOOTH_DESIRED_DRAG_PROXY;
+            float passive_drag = passive_duty_cmd * abs_vel;
+            float drag_deficit = desired_drag - passive_drag;
+            if (drag_deficit < 0.0f) {
+                drag_deficit = 0.0f;
             }
+
+            float low_speed_weight = 1.0f - clampf_local(abs_vel / SMOOTH_ACTIVE_VEL_RANGE, 0.0f, 1.0f);
+            float active_mag = (SMOOTH_ACTIVE_COULOMB_VOLT +
+                                SMOOTH_ACTIVE_VISCOUS_GAIN * abs_vel +
+                                SMOOTH_ACTIVE_DEFICIT_GAIN * drag_deficit) * low_speed_weight;
+            active_mag = clampf_local(active_mag, 0.0f, SMOOTH_ACTIVE_VOLT_MAX);
+
+            if (active_mag > 0.0f && active_mag < SMOOTH_ACTIVE_VOLT_MIN) {
+                active_mag = SMOOTH_ACTIVE_VOLT_MIN;
+            }
+            active_voltage = sign * active_mag;
         }
 
-        if (passive_on) {
-            bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                             PHASE_LO, PHASE_LO, PHASE_LO);
-            bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
-            last_voltage = 0.0f;
-            return;
-        }
+        /* Continuous passive braking (quiet): keep PHASE_LO and modulate low-side duty.
+         * In this driver implementation, PHASE_LO low-side on-time is (1 - Ua/Vs). */
+        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                         PHASE_LO, PHASE_LO, PHASE_LO);
+        float passive_pwm_voltage = (1.0f - passive_duty_cmd) * motor->voltage_limit;
+        passive_pwm_voltage = clampf_local(passive_pwm_voltage, 0.0f, motor->voltage_limit);
+        bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver,
+                                 passive_pwm_voltage, passive_pwm_voltage, passive_pwm_voltage);
 
+        /* Very low-speed compensation uses active control to keep resistance constant. */
         if (active_voltage > 0.001f || active_voltage < -0.001f) {
             bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
                                              PHASE_ON, PHASE_ON, PHASE_ON);
@@ -351,9 +354,6 @@ void haptic_loop(bldc_motor_t *motor)
             return;
         }
 
-        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                         PHASE_OFF, PHASE_OFF, PHASE_OFF);
-        bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
         last_voltage = 0.0f;
         return;
 
