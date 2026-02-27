@@ -1,1 +1,0 @@
-"mcuboot":"/home/viktor/zephyr-standalone/zephyrproject/bootloader/mcuboot":"/home/viktor/zephyr-standalone/zephyrproject/bootloader/mcuboot/boot/zephyr/sysbuild"

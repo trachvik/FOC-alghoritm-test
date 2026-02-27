@@ -1,2 +1,0 @@
-# Load board Kconfig descriptions.
-osource "/home/viktor/zephyr-standalone/zephyrproject/zephyr/boards/weact/blackpill_f411ce/Kconfig.blackpill_f411ce"
