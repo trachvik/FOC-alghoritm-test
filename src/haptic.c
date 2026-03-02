@@ -2,6 +2,7 @@
 #include "drivers/as5048a.h"
 #include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
+#include <zephyr/drivers/adc.h>
 #include <zephyr/kernel.h>
 #include <zephyr/devicetree.h>
 #include <math.h>
@@ -15,31 +16,87 @@ extern float sensor_get_angle(sensor_t *sensor);
 extern void sensor_update(sensor_t *sensor);
 extern float sensor_get_angle(sensor_t *sensor);
 
-#define NUM_STEPS 0
+#define NUM_STEPS 8
 #define SUPPLY_VOLTAGE 5.0f
-//#define HAPTIC_OUTPUT_GAIN 2.0f
+ #define HAPTIC_OUTPUT_GAIN 2.0f
 #define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
 
 /* PWM pin definitions for 6PWM BLDC driver */
 /* TODO: Update these pin numbers based on your actual hardware */
-#define PWM_AH_PIN  0   /* Phase A high-side */
-#define PWM_AL_PIN  1   /* Phase A low-side */
-#define PWM_BH_PIN  2   /* Phase B high-side */
-#define PWM_BL_PIN  3   /* Phase B low-side */
-#define PWM_CH_PIN  4   /* Phase C high-side */
-#define PWM_CL_PIN  5   /* Phase C low-side */
-#define ENABLE_PIN  NOT_SET  /* Optional enable pin */
+#define PWM_AH_PIN 0       /* Phase A high-side */
+#define PWM_AL_PIN 1       /* Phase A low-side */
+#define PWM_BH_PIN 2       /* Phase B high-side */
+#define PWM_BL_PIN 3       /* Phase B low-side */
+#define PWM_CH_PIN 4       /* Phase C high-side */
+#define PWM_CL_PIN 5       /* Phase C low-side */
+#define ENABLE_PIN NOT_SET /* Optional enable pin */
 
 /* Motor parameters */
-#define MOTOR_POLE_PAIRS 11     /* Number of pole pairs */
-#define MOTOR_PHASE_RESISTANCE 5.6f  /* Ohms */
-#define MOTOR_KV_RATING 320.0f  /* rpm/V */
-#define MOTOR_INDUCTANCE 0.0001f /* H */
+#define MOTOR_POLE_PAIRS 11         /* Number of pole pairs */
+#define MOTOR_PHASE_RESISTANCE 5.6f /* Ohms */
+#define MOTOR_KV_RATING 320.0f      /* rpm/V */
+#define MOTOR_INDUCTANCE 0.0001f    /* H */
 
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
 static const struct spi_dt_spec as5048a_spi = SPI_DT_SPEC_GET(AS5048A_NODE, SPI_WORD_SET(16) | SPI_TRANSFER_MSB | SPI_MODE_CPHA, 0);
 static const struct gpio_dt_spec user_button = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0), gpios, {0});
+
+/* ADC pro snímání proudu fází */
+#define ADC_NODE DT_NODELABEL(adc1)
+#define ADC_RESOLUTION 12
+#define ADC_VREF_MV       3300    /* 3.3V interní reference */
+#define ADC_SHUNT_OHMS    0.120f  /* 120 mΩ shunt rezistor */
+#define ADC_AMP_GAIN      31.0f   /* zesílení zesilovače */
+
+static const struct device *adc_dev = DEVICE_DT_GET(DT_NODELABEL(adc1));
+
+static const struct adc_channel_cfg adc_ch0_cfg = {
+    .gain             = ADC_GAIN_1,
+    .reference        = ADC_REF_INTERNAL,
+    .acquisition_time = ADC_ACQ_TIME_DEFAULT,
+    .channel_id       = 0,  /* PA0 - faze W */
+};
+static const struct adc_channel_cfg adc_ch1_cfg = {
+    .gain             = ADC_GAIN_1,
+    .reference        = ADC_REF_INTERNAL,
+    .acquisition_time = ADC_ACQ_TIME_DEFAULT,
+    .channel_id       = 1,  /* PA1 - faze U+V */
+};
+
+static int16_t adc_buf[2];
+static float phase_w_voltage  = 0.0f;
+static float phase_uv_voltage = 0.0f;
+static float phase_w_current  = 0.0f;  /* proud fazí W [A] */
+static float phase_uv_current = 0.0f;  /* proud fazemi U+V [A] */
+
+static void adc_init(void)
+{
+    if (!device_is_ready(adc_dev)) {
+        printk("ADC device not ready!\n");
+        return;
+    }
+    adc_channel_setup(adc_dev, &adc_ch0_cfg);
+    adc_channel_setup(adc_dev, &adc_ch1_cfg);
+    printk("ADC initialized (PA0=faze W, PA1=faze U+V)\n");
+}
+
+static void adc_read_phases(void)
+{
+    struct adc_sequence seq = {
+        .channels    = BIT(0) | BIT(1),
+        .buffer      = adc_buf,
+        .buffer_size = sizeof(adc_buf),
+        .resolution  = ADC_RESOLUTION,
+    };
+    if (adc_read(adc_dev, &seq) == 0) {
+        phase_w_voltage  = (float)adc_buf[0] / 4095.0f * (ADC_VREF_MV / 1000.0f);
+        phase_uv_voltage = (float)adc_buf[1] / 4095.0f * (ADC_VREF_MV / 1000.0f);
+        /* I = V_adc / (zesílení * R_shunt) */
+        phase_w_current  = phase_w_voltage  / (ADC_AMP_GAIN * ADC_SHUNT_OHMS);
+        phase_uv_current = phase_uv_voltage / (ADC_AMP_GAIN * ADC_SHUNT_OHMS);
+    }
+}
 
 /* Haptic state variables */
 static float start_angle = 0.0f;
@@ -54,7 +111,7 @@ static K_SEM_DEFINE(haptic_sem, 0, 1);
 static struct k_timer haptic_timer;
 
 #define HAPTIC_THREAD_STACK_SIZE 2048
-#define HAPTIC_THREAD_PRIORITY   0       /* Highest preemptible priority */
+#define HAPTIC_THREAD_PRIORITY 0 /* Highest preemptible priority */
 static K_THREAD_STACK_DEFINE(haptic_stack, HAPTIC_THREAD_STACK_SIZE);
 static struct k_thread haptic_thread_data;
 
@@ -66,10 +123,22 @@ static void haptic_timer_cb(struct k_timer *timer)
 
 static void haptic_thread_fn(void *p1, void *p2, void *p3)
 {
-    ARG_UNUSED(p1); ARG_UNUSED(p2); ARG_UNUSED(p3);
-    while (1) {
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+    printk("haptic_thread_fn started\n");
+    while (1)
+    {
         k_sem_take(&haptic_sem, K_FOREVER);
         haptic_loop(g_motor_ptr);
+        // Debug: vypiš stav tlačítka každých 200 ms
+        static int64_t last_debug = 0;
+        int64_t now_debug = k_uptime_get();
+        if (now_debug - last_debug > 200)
+        {
+            printk("Button PB8 state: %d\n", gpio_pin_get_dt(&user_button));
+            last_debug = now_debug;
+        }
     }
 }
 
@@ -80,9 +149,11 @@ int haptic_update_num_steps_from_button(void)
     static int current_num_steps = NUM_STEPS;
     static int64_t last_change_ms = 0;
 
-    if (!initialized) {
-        if (user_button.port != NULL && gpio_is_ready_dt(&user_button)) {
-            gpio_pin_configure_dt(&user_button, GPIO_INPUT);
+    if (!initialized)
+    {
+        if (user_button.port != NULL && gpio_is_ready_dt(&user_button))
+        {
+            gpio_pin_configure_dt(&user_button, GPIO_INPUT | GPIO_PULL_UP);
             int init_state = gpio_pin_get_dt(&user_button);
             last_pressed = (init_state > 0);
             last_change_ms = k_uptime_get();
@@ -90,19 +161,27 @@ int haptic_update_num_steps_from_button(void)
         initialized = true;
     }
 
-    if (user_button.port == NULL || !gpio_is_ready_dt(&user_button)) {
+    if (user_button.port == NULL || !gpio_is_ready_dt(&user_button))
+    {
         return current_num_steps;
     }
 
-    bool pressed = gpio_pin_get_dt(&user_button) > 0;
+    // Správná detekce stisku pro aktivní LOW tlačítko
+    bool pressed = gpio_pin_get_dt(&user_button) == 0;
     int64_t now_ms = k_uptime_get();
 
-    if (pressed && !last_pressed && (now_ms - last_change_ms) > 180) {
-        if (current_num_steps == 0) {
+    if (pressed && !last_pressed && (now_ms - last_change_ms) > 180)
+    {
+        if (current_num_steps == 0)
+        {
             current_num_steps = 20;
-        } else if (current_num_steps <= 8) {
+        }
+        else if (current_num_steps <= 8)
+        {
             current_num_steps = 0;
-        } else {
+        }
+        else
+        {
             current_num_steps -= 4;
         }
         last_change_ms = now_ms;
@@ -111,7 +190,6 @@ int haptic_update_num_steps_from_button(void)
     last_pressed = pressed;
     return current_num_steps;
 }
-
 
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 {
@@ -127,6 +205,9 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] AS5048A ready\n\n");
 
+    /* Initialize ADC */
+    adc_init();
+
     /* Initialize BLDC 6PWM Driver */
     printk("2. Initializing 6PWM driver...\n");
     bldc_driver_6pwm_init_struct(driver_6pwm,
@@ -136,10 +217,10 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
                                  ENABLE_PIN);
 
     /* Configure driver parameters */
-    driver_6pwm->pwm_frequency = 25000;  /* 25 kHz PWM */
+    driver_6pwm->pwm_frequency = 25000; /* 25 kHz PWM */
     driver_6pwm->voltage_power_supply = SUPPLY_VOLTAGE;
     driver_6pwm->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
-    driver_6pwm->dead_zone = 0.02f;  /* 2% dead time */
+    driver_6pwm->dead_zone = 0.02f; /* 2% dead time */
 
     if (bldc_driver_6pwm_init_hw(driver_6pwm) != DRIVER_INIT_OK)
     {
@@ -164,8 +245,8 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     /* Configure motor parameters */
     motor->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
-    motor->velocity_limit = 20.0f;  /* rad/s */
-    //motor->voltage_sensor_align = 3.0f;
+    motor->velocity_limit = 20.0f; /* rad/s */
+    // motor->voltage_sensor_align = 3.0f;
 
     if (!bldc_motor_init(motor))
     {
@@ -194,23 +275,27 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("================================================\n\n");
 
     /* Set motor to torque control mode (voltage) */
-    //motor->controller = TORQUE;
-    motor->target = 0.0f;  /* Start with zero torque */
+    // motor->controller = TORQUE;
+    motor->target = 0.0f; /* Start with zero torque */
 
     /* Settle motor at zero torque after calibration */
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 100; i++)
+    {
         bldc_motor_loop_foc(motor);
         bldc_motor_move(motor, 0.0f);
         k_msleep(1);
     }
 
     k_msleep(500);
-    
+
     /* Store start angle for relative position calculation */
     uint16_t startup_raw = 0;
-    if (as5048a_read_raw(as5048a, &startup_raw) == 0) {
+    if (as5048a_read_raw(as5048a, &startup_raw) == 0)
+    {
         start_angle = ((float)startup_raw / 16384.0f) * _2PI;
-    } else {
+    }
+    else
+    {
         start_angle = 0.0f;
     }
     step_count_buffer = 0;
@@ -234,93 +319,100 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
 void haptic_loop(bldc_motor_t *motor)
 {
-    float target_voltage;
-    float voltage_filter_alpha = 0.8f;
+    //sensor_update(motor->sensor);
+    //bldc_motor_loop_foc(motor);
+    //bldc_motor_move(motor, motor->voltage_limit);
 
-    int num_steps = haptic_update_num_steps_from_button();
-    
-    /* Read encoder via sensor abstraction linked in motor struct */
-    sensor_update(motor->sensor);
-    float current_angle = sensor_get_angle(motor->sensor);
-    
-    /* Calculate relative angle */
-    float angle_rel = current_angle - start_angle;
+        /* Snímej hodnoty z ADC (faze W a U+V) */
+        adc_read_phases();
 
-    // Preserve position when num_steps is changed
-    if (num_steps != num_steps_old) {
-        step_count_buffer = step_count;
-        start_angle = current_angle;
-        num_steps_old = num_steps;
-        angle_rel = 0.0f;
-    }
-    
-    /* Normalize angle to [0, 2π] */
-    while (angle_rel > _2PI) angle_rel -= _2PI;
-    while (angle_rel < 0) angle_rel += _2PI;
-    
-    /* Calculate step position */
-    float step_size = (num_steps > 0) ? (_2PI / (float)num_steps) : _2PI;
-    float step_count_f = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0.0f;
-    step_count = (int)roundf(step_count_f) + step_count_buffer;
-    int step_count_abs = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0;
-    float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
-    
-    /* Debug print */
-    /*if (now - last_print > 500) {
-        printk("Angle: %.1f°, Vel: %.2f rad/s\n", 
-               angle_rel * 180.0f / 3.14159f, motor->shaft_velocity);
-        last_print = now;
-    }*/
-    
-    /* Smooth mode */
-    if (num_steps == 0) {
-        /*float damping = 0.5f;
-        target_voltage = -damping * motor->shaft_velocity;
-        
-        float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
-        if (abs_vel < 0.1f) {
-            target_voltage = 0.0f;
-        } else if (abs_vel < 3.0f) {
-            float scale = (abs_vel - 0.1f) / 2.9f;
-            target_voltage *= scale;
+        float target_voltage;
+        float voltage_filter_alpha = 0.8f;
+
+        //int num_steps = haptic_update_num_steps_from_button();
+        int num_steps = NUM_STEPS;
+
+        /* Read encoder via sensor abstraction linked in motor struct */
+        sensor_update(motor->sensor);
+        float current_angle = sensor_get_angle(motor->sensor);
+
+        /* Calculate relative angle */
+        float angle_rel = current_angle - start_angle;
+
+        // Preserve position when num_steps is changed
+        if (num_steps != num_steps_old) {
+            step_count_buffer = step_count;
+            start_angle = current_angle;
+            num_steps_old = num_steps;
+            angle_rel = 0.0f;
         }
-        
-        target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;*/
-        // passive braking: short all three phases to low side
-        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                         PHASE_LO, PHASE_LO, PHASE_LO);
-        bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
-        last_voltage = 0.0f;
 
-    }
-    /* Detent mode */
-    else {
-        bldc_motor_loop_foc(motor);
-        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                         PHASE_ON, PHASE_ON, PHASE_ON);
-        float norm_pos = between_steps_pos / step_size;
-        target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos); // does not work well with arm_sin_f32 for some reason, maybe due to precision issues, so using math.h sinf instead
-        
-        float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
-        
-        if (dist < 0.05f) {
-            target_voltage = 0.0f;
-        } else if (dist < 0.15f) {
-            float scale = (dist - 0.05f) / 0.1f;
-            target_voltage *= scale;
-        }
-        
-        float scaling_factor = 0.3f; // for smoother detents and less noise
-        target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
-    
-    
-    last_voltage = target_voltage;
+        /* Normalize angle to [0, 2π] */
+        while (angle_rel > _2PI) angle_rel -= _2PI;
+        while (angle_rel < 0) angle_rel += _2PI;
 
-   // float commanded_voltage = target_voltage * HAPTIC_OUTPUT_GAIN;
-    //if (commanded_voltage > motor->voltage_limit) commanded_voltage = motor->voltage_limit;
-    //if (commanded_voltage < -motor->voltage_limit) commanded_voltage = -motor->voltage_limit;
-    
-    /* SEND VOLTAGE AFTER loopFOC */
-    bldc_motor_move(motor, target_voltage);
-    }
+        /* Calculate step position */
+        float step_size = (num_steps > 0) ? (_2PI / (float)num_steps) : _2PI;
+        float step_count_f = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0.0f;
+        step_count = (int)roundf(step_count_f) + step_count_buffer;
+        int step_count_abs = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0;
+        float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
+
+        /* Debug print */
+        /*if (now - last_print > 500) {
+            printk("Angle: %.1f°, Vel: %.2f rad/s\n",
+                   angle_rel * 180.0f / 3.14159f, motor->shaft_velocity);
+            last_print = now;
+        }*/
+
+    //     /* Smooth mode */
+    //     if (num_steps == 0) {
+    //         /*float damping = 0.5f;
+    //         target_voltage = -damping * motor->shaft_velocity;
+
+    //         float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
+    //         if (abs_vel < 0.1f) {
+    //             target_voltage = 0.0f;
+    //         } else if (abs_vel < 3.0f) {
+    //             float scale = (abs_vel - 0.1f) / 2.9f;
+    //             target_voltage *= scale;
+    //         }
+
+    //         target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;*/
+    //         // passive braking: short all three phases to low side
+    //         bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+    //                                          PHASE_LO, PHASE_LO, PHASE_LO);
+    //         bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
+    //         last_voltage = 0.0f;
+
+    //     }
+    //     /* Detent mode */
+    //     else {
+            bldc_motor_loop_foc(motor);
+            bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                             PHASE_ON, PHASE_ON, PHASE_ON);
+            float norm_pos = between_steps_pos / step_size;
+            target_voltage = -motor->voltage_limit * 0.2f * sinf(_2PI * norm_pos); // does not work well with arm_sin_f32 for some reason, maybe due to precision issues, so using math.h sinf instead
+
+            float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
+
+            if (dist < 0.05f) {
+                target_voltage = 0.0f;
+            } else if (dist < 0.15f) {
+                float scale = (dist - 0.05f) / 0.1f;
+                target_voltage *= scale;
+            }
+
+            float scaling_factor = 0.3f; // for smoother detents and less noise
+            target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
+
+       last_voltage = target_voltage;
+
+       float commanded_voltage = target_voltage * HAPTIC_OUTPUT_GAIN;
+       if (commanded_voltage > motor->voltage_limit) commanded_voltage = motor->voltage_limit;
+       if (commanded_voltage < -motor->voltage_limit) commanded_voltage = -motor->voltage_limit;
+
+
+       bldc_motor_move(motor, commanded_voltage);
+    //    }
 }
