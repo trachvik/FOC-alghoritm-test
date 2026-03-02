@@ -127,6 +127,7 @@ typedef struct {
     float voltage_bemf;       /* Estimated back-EMF voltage */
     float u_alpha, u_beta;    /* Phase voltages alpha and beta */
     float ua, ub, uc;         /* Current phase voltages */
+    float current_a, current_b; /* Measured phase currents [A] – set externally from ADC before calling bldc_motor_loop_foc() */
     
     /* Configuration parameters */
     float voltage_sensor_align; /* Sensor alignment voltage */
@@ -304,6 +305,6 @@ void pid_controller_reset(pid_controller_t *pid);   // TO DO is this needed?
 
 /* Low pass filter functions */
 void lowpass_filter_init(lowpass_filter_t *lpf, float tf);
-//float lowpass_filter_operator(lowpass_filter_t *lpf, float x);  // TO DO - do I need this?
+float lowpass_filter_operator(lowpass_filter_t *lpf, float x);
 
 #endif /* BLDC_MOTOR_H */

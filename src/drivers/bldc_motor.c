@@ -162,47 +162,47 @@ void pid_controller_init(pid_controller_t *pid, float p, float i, float d, float
 /**
  * PID controller operator
  */
-// float pid_controller_operator(pid_controller_t *pid, float error)
-// {
-//     if (pid == NULL) return 0.0f;
+float pid_controller_operator(pid_controller_t *pid, float error)
+{
+    if (pid == NULL) return 0.0f;
     
-//     unsigned long timestamp = micros();
-//     float ts = (timestamp - pid->timestamp_prev) * 1e-6f;
+    unsigned long timestamp = micros();
+    float ts = (timestamp - pid->timestamp_prev) * 1e-6f;
     
-//     if (ts <= 0.0f || ts > 0.5f) ts = 1e-3f;
+    if (ts <= 0.0f || ts > 0.5f) ts = 1e-3f;
     
-//     /* Proportional term */
-//     float proportional = pid->p * error;
+    /* Proportional term */
+    float proportional = pid->p * error;
     
-//     /* Integral term */
-//     float integral = pid->integral_prev + pid->i * ts * 0.5f * (error + pid->error_prev);
-//     integral = _CONSTRAIN(integral, -pid->limit, pid->limit);
+    /* Integral term */
+    float integral = pid->integral_prev + pid->i * ts * 0.5f * (error + pid->error_prev);
+    integral = _CONSTRAIN(integral, -pid->limit, pid->limit);
     
-//     /* Derivative term */
-//     float derivative = pid->d * (error - pid->error_prev) / ts;
+    /* Derivative term */
+    float derivative = pid->d * (error - pid->error_prev) / ts;
     
-//     /* Calculate output */
-//     float output = proportional + integral + derivative;
-//     output = _CONSTRAIN(output, -pid->limit, pid->limit);
+    /* Calculate output */
+    float output = proportional + integral + derivative;
+    output = _CONSTRAIN(output, -pid->limit, pid->limit);
     
-//     /* Apply ramp limit */
-//     if (pid->output_ramp > 0) {
-//         float output_rate = (output - pid->output_prev) / ts;
-//         if (output_rate > pid->output_ramp) {
-//             output = pid->output_prev + pid->output_ramp * ts;
-//         } else if (output_rate < -pid->output_ramp) {
-//             output = pid->output_prev - pid->output_ramp * ts;
-//         }
-//     }
+    /* Apply ramp limit */
+    if (pid->output_ramp > 0) {
+        float output_rate = (output - pid->output_prev) / ts;
+        if (output_rate > pid->output_ramp) {
+            output = pid->output_prev + pid->output_ramp * ts;
+        } else if (output_rate < -pid->output_ramp) {
+            output = pid->output_prev - pid->output_ramp * ts;
+        }
+    }
     
-//     /* Save state */
-//     pid->integral_prev = integral;
-//     pid->output_prev = output;
-//     pid->error_prev = error;
-//     pid->timestamp_prev = timestamp;
+    /* Save state */
+    pid->integral_prev = integral;
+    pid->output_prev = output;
+    pid->error_prev = error;
+    pid->timestamp_prev = timestamp;
     
-//     return output;
-// }
+    return output;
+}
 
 /**
  * PID controller reset
@@ -650,8 +650,36 @@ void bldc_motor_loop_foc(bldc_motor_t *motor)
     /* Calculate electrical angle from sensor */
     motor->electrical_angle = bldc_motor_electrical_angle(motor);
     
-    /* Apply the phase voltages that were calculated in move() */
-    /* voltage.q and voltage.d are set by move() */
+    /* FOC current control: Clarke + Park + PID → voltage.q/d
+     * Mirrors SimpleFOC's loopFOC() TorqueControlType::foc_current branch.
+     * current_a (Ia) and current_b (Ib) must be set by the caller (from ADC)
+     * before this function is invoked. */
+    if (motor->torque_controller == FOC_CURRENT) {
+        /* Clarke transform: 3-phase → αβ (CMSIS DSP) */
+        float I_alpha, I_beta;
+        arm_clarke_f32(motor->current_a, motor->current_b, &I_alpha, &I_beta);
+
+        /* Park transform: αβ → dq (CMSIS DSP) */
+        float sin_e = sinf(motor->electrical_angle);
+        float cos_e = cosf(motor->electrical_angle);
+        float Id_raw, Iq_raw;
+        arm_park_f32(I_alpha, I_beta, &Id_raw, &Iq_raw, sin_e, cos_e);
+
+        /* Low-pass filter (structs already inside motor) */
+        motor->current.d = lowpass_filter_operator(&motor->lpf_current_d, Id_raw);
+        motor->current.q = lowpass_filter_operator(&motor->lpf_current_q, Iq_raw);
+
+        /* Constrain current setpoint */
+        motor->current_sp = _CONSTRAIN(motor->current_sp, -motor->current_limit, motor->current_limit);
+
+        /* Current PIDs → voltage setpoints */
+        motor->voltage.q = pid_controller_operator(&motor->pid_current_q,
+                                                   motor->current_sp - motor->current.q);
+        motor->voltage.d = pid_controller_operator(&motor->pid_current_d,
+                                                   0.0f - motor->current.d);
+    }
+
+    /* Apply phase voltages (set by FOC current loop above, or by bldc_motor_move() for VOLTAGE mode) */
     bldc_motor_set_phase_voltage(motor, motor->voltage.q, motor->voltage.d, motor->electrical_angle);
 }
 
