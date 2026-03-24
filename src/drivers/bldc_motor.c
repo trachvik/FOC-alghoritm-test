@@ -1,5 +1,6 @@
 #include "bldc_motor.h"
 #include "bldc_driver_6pwm.h"
+#include "low_side_cs.h"
 #include <string.h>
 #include <math.h>
 #include <arm_math.h>
@@ -94,27 +95,12 @@ float driver_get_voltage_limit(bldc_driver_t *driver)
 /**
  * Current sense stubs
  */
-// void current_sense_enable(current_sense_t *cs)
-// {
-//     /* Stub - no current sensing yet */
-// }
-
-// void current_sense_disable(current_sense_t *cs)
-// {
-//     /* Stub - no current sensing yet */
-// }
-
-// bool current_sense_is_initialized(current_sense_t *cs)
-// {
-//     /* Stub - no current sensing yet */
-//     return false;
-// }
-
-// int current_sense_driver_align(current_sense_t *cs, float voltage, int8_t modulation_centered)
-// {
-//     /* Stub - no current sensing yet */
-//     return 1;
-// }
+/* current sense helpers — thin wrappers so bldc_motor.c stays independent
+ * of the low-level ADC details */
+static inline bool current_sense_is_initialized(current_sense_t *cs)
+{
+    return cs != NULL && cs->initialized;
+}
 
 /* Trapezoid maps */
 /*static const int trap_120_map[6][3] = {
@@ -334,11 +320,11 @@ void bldc_motor_link_sensor(bldc_motor_t *motor, sensor_t *sensor)
 /**
  * Link current sense to motor
  */
-/*void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *current_sense)
+void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *cs)
 {
     if (motor == NULL) return;
-    motor->current_sense = current_sense;
-}*/
+    motor->current_sense = cs;
+}
 
 /**
  * Calculate shaft angle
@@ -652,9 +638,20 @@ void bldc_motor_loop_foc(bldc_motor_t *motor)
     
     /* FOC current control: Clarke + Park + PID → voltage.q/d
      * Mirrors SimpleFOC's loopFOC() TorqueControlType::foc_current branch.
-     * current_a (Ia) and current_b (Ib) must be set by the caller (from ADC)
-     * before this function is invoked. */
+     *
+     * If a current_sense is linked, fetch fresh phase currents from it;
+     * otherwise fall back to the externally-set current_a / current_b fields
+     * (backward-compatible with old haptic.c code that wrote these directly). */
     if (motor->torque_controller == FOC_CURRENT) {
+        if (motor->current_sense != NULL) {
+            /* --- SimpleFOC: current_sense->getPhaseCurrents() --- */
+            phase_current_t pc = low_side_cs_get_phase_currents(motor->current_sense);
+            /* 2-shunt wiring: PA0=Ic, PA1=Ia; Ib reconstructed in low_side_cs */
+            motor->current_a = pc.a;   /* Ia */
+            motor->current_b = pc.b;   /* Ib = -(Ia+Ic) */
+        }
+        /* else: caller must set motor->current_a, motor->current_b before calling */
+
         /* Clarke transform: 3-phase → αβ (CMSIS DSP) */
         float I_alpha, I_beta;
         arm_clarke_f32(motor->current_a, motor->current_b, &I_alpha, &I_beta);
@@ -665,7 +662,7 @@ void bldc_motor_loop_foc(bldc_motor_t *motor)
         float Id_raw, Iq_raw;
         arm_park_f32(I_alpha, I_beta, &Id_raw, &Iq_raw, sin_e, cos_e);
 
-        /* Low-pass filter (structs already inside motor) */
+        /* Low-pass filter */
         motor->current.d = lowpass_filter_operator(&motor->lpf_current_d, Id_raw);
         motor->current.q = lowpass_filter_operator(&motor->lpf_current_q, Iq_raw);
 

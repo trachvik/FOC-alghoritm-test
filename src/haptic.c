@@ -1,15 +1,16 @@
 #include "haptic.h"
 #include "drivers/as5048a.h"
+#include "drivers/low_side_cs.h"
 #include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/kernel.h>
 #include <zephyr/devicetree.h>
 #include <math.h>
-/* Raw STM32F4 register access for ADC1 injected hardware trigger via TIM1_TRGO.
- * Zephyr ADC driver is used only for GPIO pin-mux; register-level config is
- * needed for the injected-channel / external-trigger features Zephyr does not
- * yet expose through its generic ADC API. */
+/* Raw STM32F4 register access — used by low_side_cs.c for TIM1 and ADC1.
+ * Kept here only to satisfy the stm32f4xx.h include needed by the inline
+ * sensor / driver helpers below; all register manipulation has moved to
+ * low_side_cs.c. */
 #include <stm32f4xx.h>
 
 /* Sensor abstraction - implemented in as5048a.c */
@@ -48,13 +49,15 @@ static const struct gpio_dt_spec user_button = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0)
 
 /* ADC pro snímání proudu fází */
 #define ADC_NODE DT_NODELABEL(adc1)
-#define ADC_RESOLUTION 12
-#define ADC_VREF_MV       3300    /* 3.3V interní reference */
 #define ADC_SHUNT_OHMS    0.120f  /* 120 mΩ shunt rezistor */
 #define ADC_AMP_GAIN      31.0f   /* zesílení zesilovače */
+#define ADC_VREF_MV       3300U   /* 3.3V interní reference */
+/* Sampling offset after trough: TMC6300 propagation ~500 ns + settling        */
+/* 800 ns @ 100 MHz → CCR4 = 80 counts (see low_side_cs.c for derivation)     */
+#define ADC_TROUGH_OFFSET_NS  800U
 
-/* FOC current control parameters */
-/* LPF pro proudy je konfigurován přes motor->lpf_current_q/d (viz bldc_motor_init_struct) */
+/* Low-side current sense instance — mirrors SimpleFOC LowsideCurrentSense     */
+static low_side_cs_t g_cs;
 
 static const struct device *adc_dev = DEVICE_DT_GET(DT_NODELABEL(adc1));
 
@@ -62,154 +65,48 @@ static const struct adc_channel_cfg adc_ch0_cfg = {
     .gain             = ADC_GAIN_1,
     .reference        = ADC_REF_INTERNAL,
     .acquisition_time = ADC_ACQ_TIME_DEFAULT,
-    .channel_id       = 0,  /* PA0 - faze W */
+    .channel_id       = 0,  /* PA0 - faze W (Ic) */
 };
 static const struct adc_channel_cfg adc_ch1_cfg = {
     .gain             = ADC_GAIN_1,
     .reference        = ADC_REF_INTERNAL,
     .acquisition_time = ADC_ACQ_TIME_DEFAULT,
-    .channel_id       = 1,  /* PA1 - faze U+V */
+    .channel_id       = 1,  /* PA1 - faze U+V (Ia) */
 };
-
-static float phase_w_voltage  = 0.0f;
-static float phase_uv_voltage = 0.0f;
-static float phase_w_current  = 0.0f;  /* phase W current [A] */
-static float phase_uv_current = 0.0f;  /* phase UV current [A] */
-
-/* Zero-current ADC voltage offsets — calibrated at startup with motor stopped.
- * Mirrors SimpleFOC LowsideCurrentSense::calibrateOffsets():  the op-amp
- * output sits at ~VCC/2 (≈1.65 V) when no current flows; subtracting this
- * gives a bipolar reading centred on 0 V = 0 A. */
-static float offset_w  = 0.0f;  /* zero-current voltage for phase W  [V] */
-static float offset_uv = 0.0f;  /* zero-current voltage for phase UV [V] */
 
 static void adc_init(void)
 {
-    /* --- Step 1: configure GPIO pin-mux via Zephyr driver --- */
+    /* Pin-mux via Zephyr — low_side_cs_init() also calls this internally,
+     * but we keep the explicit setup here for legacy compatibility in case
+     * the Zephyr device tree binding needs it before register-level config. */
     if (!device_is_ready(adc_dev)) {
         printk("[ADC] device not ready!\n");
         return;
     }
     adc_channel_setup(adc_dev, &adc_ch0_cfg);
     adc_channel_setup(adc_dev, &adc_ch1_cfg);
-
-    /* --- Step 2: route TIM1 UPDATE event to TRGO ---
-     *
-     * TIM1 remains in its current edge-aligned mode (same 25 kHz frequency as
-     * TIM3) so that both timers stay in sync — mismatched frequencies between
-     * low-side (TIM1) and high-side (TIM3) would distort the phase voltages.
-     *
-     * At counter = 0 (start of each PWM period in edge-aligned mode) all three
-     * TIM1 channels simultaneously assert their output HIGH, which (for
-     * normal polarity) turns all low-side FETs ON through the TMC6300.  That
-     * instant is the guaranteed valid window for bottom-side shunt sampling.
-     *
-     * MMS = 0b010 → Update event routed to TRGO → triggers ADC1 injected.
-     */
-    TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
-              | TIM_CR2_MMS_1;                               /* TRGO = Update event          */
-
-    /* --- Step 3: configure ADC1 injected channels triggered by TIM1_TRGO ---
-     *
-     * STM32F4 "injected" channels are purpose-built for motor current sensing:
-     * separate trigger (JEXTSEL/JEXTEN), sequence register (JSQR) and result
-     * registers (JDR1/JDR2) — zero interference with regular conversions.
-     *
-     * STM32F411 RM0383 Table 77 — injected trigger JEXTSEL map (ADC1/ADC2):
-     *   0b0000 = TIM1_CC4
-     *   0b0001 = TIM1_TRGO  ← used here (Update event at counter = 0)
-     */
-    ADC1->CR2 &= ~ADC_CR2_ADON;                              /* power down to reconfigure    */
-
-    /* Injected sequence: 2 conversions — JSQ3 first, then JSQ4       */
-    /* JL = 1 → 2 conversions; JDR1 = JSQ3 = CH0 (PA0, phase W)      */
-    /*                          JDR2 = JSQ4 = CH1 (PA1, phase UV)     */
-    ADC1->JSQR = ((2U - 1U) << ADC_JSQR_JL_Pos)             /* JL = 1 → 2 conversions       */
-               | (0U        << ADC_JSQR_JSQ3_Pos)            /* JSQ3: CH0 → PA0 → phase W    */
-               | (1U        << ADC_JSQR_JSQ4_Pos);           /* JSQ4: CH1 → PA1 → phase UV   */
-
-    /* JEXTSEL = 0b0001 (TIM1_TRGO), JEXTEN = 0b01 (rising edge)      */
-    ADC1->CR2 = (ADC1->CR2 & ~(ADC_CR2_JEXTSEL_Msk | ADC_CR2_JEXTEN_Msk))
-              | (1U << ADC_CR2_JEXTSEL_Pos)                  /* TIM1_TRGO                    */
-              | ADC_CR2_JEXTEN_0;                            /* rising edge trigger          */
-
-    ADC1->CR2 |= ADC_CR2_ADON;                               /* re-enable ADC                */
-
-    printk("[ADC] HW-triggered injected init OK: "
-           "CH0=PA0(phW) CH1=PA1(phUV) trigger=TIM1_TRGO edge-aligned 25kHz\n");
-}
-
-static void adc_read_phases(void)
-{
-    /* JEOC is set by hardware after the TIM1_TRGO-triggered injected conversion
-     * sequence completes (i.e. at the bottom of every PWM period, when all
-     * low-side FETs are conducting).  If the flag is not yet set the FOC loop
-     * reuses the previous sample — still far better than an unsynchronised
-     * software-triggered read. */
-    if (!(ADC1->SR & ADC_SR_JEOC)) {
-        return;  /* conversion not ready yet; keep previous values */
-    }
-    ADC1->SR &= ~ADC_SR_JEOC;  /* clear flag before reading result registers */
-
-    /* JDR1 = 1st injected conversion = JSQ3 = CH0 = PA0 = phase W  */
-    /* JDR2 = 2nd injected conversion = JSQ4 = CH1 = PA1 = phase UV */
-    uint16_t raw_w  = (uint16_t)(ADC1->JDR1 & 0x0FFFU);
-    uint16_t raw_uv = (uint16_t)(ADC1->JDR2 & 0x0FFFU);
-
-    phase_w_voltage  = (float)raw_w  / 4095.0f * (ADC_VREF_MV / 1000.0f);
-    phase_uv_voltage = (float)raw_uv / 4095.0f * (ADC_VREF_MV / 1000.0f);
-    /* Subtract zero-current offset, then compute current.
-     * I = (V_adc - V_offset) / (amp_gain * R_shunt)
-     * Mirrors SimpleFOC: current.a = (_readADCVoltageLowSide() - offset_ia) * gain_a */
-    phase_w_current  = (phase_w_voltage  - offset_w)  / (ADC_AMP_GAIN * ADC_SHUNT_OHMS);
-    phase_uv_current = (phase_uv_voltage - offset_uv) / (ADC_AMP_GAIN * ADC_SHUNT_OHMS);
-}
-
-/* Calibrate zero-current ADC offsets — call once at startup with motor stopped
- * and zero voltage applied.  Mirrors SimpleFOC calibrateOffsets(): 2000 samples
- * averaged via the hardware trigger, each spaced one PWM period apart. */
-#define ADC_CALIBRATION_ROUNDS 2000
-static void adc_calibrate_offsets(void)
-{
-    float sum_w = 0.0f, sum_uv = 0.0f;
-    int   valid = 0;
-
-    printk("[ADC] Calibrating zero-current offsets (%d samples)...\n",
-           ADC_CALIBRATION_ROUNDS);
-
-    for (int i = 0; i < ADC_CALIBRATION_ROUNDS; i++) {
-        /* Wait for next HW-triggered injected conversion (JEOC).
-         * At 25 kHz, one PWM period = 40 µs; timeout at 200 µs. */
-        for (int t = 0; t < 200; t++) {
-            if (ADC1->SR & ADC_SR_JEOC) break;
-            k_busy_wait(1);
-        }
-        if (!(ADC1->SR & ADC_SR_JEOC)) continue;  /* timed out — skip sample */
-
-        ADC1->SR &= ~ADC_SR_JEOC;
-        sum_w  += (float)(ADC1->JDR1 & 0x0FFFU) / 4095.0f * (ADC_VREF_MV / 1000.0f);
-        sum_uv += (float)(ADC1->JDR2 & 0x0FFFU) / 4095.0f * (ADC_VREF_MV / 1000.0f);
-        valid++;
-    }
-
-    if (valid > 0) {
-        offset_w  = sum_w  / valid;
-        offset_uv = sum_uv / valid;
-    }
-    printk("[ADC] Offsets: W=%.4f V  UV=%.4f V  (n=%d)\n",
-           (double)offset_w, (double)offset_uv, valid);
+    /* All register-level ADC + TIM1 configuration (center-aligned, CCR4
+     * trigger, dead-time, BDTR) is done inside low_side_cs_init().         */
 }
 
 /*
  * Zapojení ADC shuntů (2-shunt měření):
- *   PA0 (phase_w_current)  = Ic  (fáze W / fáze C)
- *   PA1 (phase_uv_current) = Ia  (fáze U) -- označeno "U+V" na HW
+ *   PA0 / ADC1_IN0  = Ic  (fáze W / fáze C)
+ *   PA1 / ADC1_IN1  = Ia  (fáze U) — označeno "U+V" na HW
  *   Ib = -(Ia + Ic)  dle Kirchhoffova zákona
  *
- * Clarke + Park transformace a PID regulátory proudu jsou plně uvnitř
- * bldc_motor_loop_foc() – inspirováno SimpleFOC loopFOC().
- * Stačí nastavit motor->torque_controller = FOC_CURRENT a před každým
- * voláním bldc_motor_loop_foc() zapsat motor->current_a a motor->current_b.
+ * Veškerá logika (offset calibration, Clarke/Park, PID) je v:
+ *   low_side_cs.c  — analogie SimpleFOC LowsideCurrentSense
+ *   bldc_motor.c   — bldc_motor_loop_foc() (loopFOC ekvivalent)
+ *
+ * Postup inicializace:
+ *   1. low_side_cs_init_struct(&g_cs, ...)
+ *   2. bldc_driver_6pwm_init_hw(...)    ← set TIM1 running
+ *   3. low_side_cs_init(&g_cs)          ← switch TIM1 to center-aligned, CCR4
+ *   4. bldc_motor_link_current_sense(motor, &g_cs)
+ *   5. (FOC cal, settle)
+ *   6. low_side_cs_calibrate_offsets(&g_cs)
+ *   7. motor->torque_controller = FOC_CURRENT
  */
 
 /* Haptic state variables */
@@ -310,7 +207,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     bldc_driver_6pwm_t *driver_6pwm = (bldc_driver_6pwm_t *)driver;
     struct as5048a_device *as5048a = (struct as5048a_device *)encoder;
 
-    /* Initialize AS5048A encoder */
+    /* --- Step 1: AS5048A encoder ----------------------------------------- */
     printk("1. Initializing AS5048A encoder...\n");
     if (as5048a_init(as5048a, &as5048a_spi) < 0)
     {
@@ -319,7 +216,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] AS5048A ready\n\n");
 
-    /* Initialize BLDC 6PWM Driver */
+    /* --- Step 2: 6PWM driver (TIM1 low-side, TIM3 high-side) ------------- */
     printk("2. Initializing 6PWM driver...\n");
     bldc_driver_6pwm_init_struct(driver_6pwm,
                                  PWM_AH_PIN, PWM_AL_PIN,
@@ -327,11 +224,10 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
                                  PWM_CH_PIN, PWM_CL_PIN,
                                  ENABLE_PIN);
 
-    /* Configure driver parameters */
-    driver_6pwm->pwm_frequency = 25000; /* 25 kHz PWM */
+    driver_6pwm->pwm_frequency        = 25000;
     driver_6pwm->voltage_power_supply = SUPPLY_VOLTAGE;
-    driver_6pwm->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
-    driver_6pwm->dead_zone = 0.02f; /* 2% dead time */
+    driver_6pwm->voltage_limit        = HAPTIC_VOLTAGE_LIMIT;
+    driver_6pwm->dead_zone            = 0.02f;
 
     if (bldc_driver_6pwm_init_hw(driver_6pwm) != DRIVER_INIT_OK)
     {
@@ -340,28 +236,39 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] Driver initialized\n\n");
 
-    /* Initialize ADC AFTER the PWM driver so that TIM1 is fully configured
-     * before we set TIM1->CR2 MMS=Update.  If called earlier, bldc_driver_6pwm_init_hw()
-     * would reconfigure TIM1 and silently reset the TRGO routing. */
+    /* --- Step 3: Low-side current sense (mirrors SimpleFOC LowsideCS) -----
+     * Must be called AFTER bldc_driver_6pwm_init_hw() so that TIM1 is
+     * running before low_side_cs_init() reconfigures CR1/BDTR/CCR4.        */
+    printk("3. Initializing low-side current sense...\n");
+    /* Pin-mux via Zephyr ADC driver (must happen before register access) */
     adc_init();
-    /* Initialize BLDC Motor */
-    printk("3. Initializing BLDC motor...\n");
+
+    low_side_cs_init_struct(&g_cs,
+                            ADC_SHUNT_OHMS,
+                            ADC_AMP_GAIN,
+                            ADC_VREF_MV,
+                            ADC_TROUGH_OFFSET_NS);
+    if (!low_side_cs_init(&g_cs))
+    {
+        printk("   ERROR: low_side_cs_init failed\n");
+        return -1;
+    }
+    printk("   [OK] Current sense ready (center-aligned TIM1, CCR4 trigger)\n\n");
+
+    /* --- Step 4: BLDC Motor ----------------------------------------------- */
+    printk("4. Initializing BLDC motor...\n");
     bldc_motor_init_struct(motor,
                            MOTOR_POLE_PAIRS,
                            MOTOR_PHASE_RESISTANCE,
                            MOTOR_KV_RATING,
                            MOTOR_INDUCTANCE);
 
-    /* Link driver to motor */
     bldc_motor_link_driver(motor, driver);
-
-    /* Link sensor to motor - use dummy pointer, actual access via g_as5048a */
     bldc_motor_link_sensor(motor, encoder);
+    bldc_motor_link_current_sense(motor, &g_cs);   /* NEW: wire current sense */
 
-    /* Configure motor parameters */
-    motor->voltage_limit = HAPTIC_VOLTAGE_LIMIT;
-    motor->velocity_limit = 20.0f; /* rad/s */
-    // motor->voltage_sensor_align = 3.0f;
+    motor->voltage_limit  = HAPTIC_VOLTAGE_LIMIT;
+    motor->velocity_limit = 20.0f;
 
     if (!bldc_motor_init(motor))
     {
@@ -370,10 +277,8 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] Motor initialized\n\n");
 
-    /* Run FOC calibration */
-    printk("4. Running FOC calibration...\n");
-    printk("   This will align sensor and motor phases\n");
-    printk("   Motor will move slightly during calibration\n");
+    /* --- Step 5: FOC sensor calibration ---------------------------------- */
+    printk("5. Running FOC calibration (sensor alignment)...\n");
     k_msleep(1000);
 
     if (!bldc_motor_init_foc(motor))
@@ -384,11 +289,8 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] FOC calibration complete!\n\n");
 
-    /* FOC VOLTAGE mode — does not rely on current sensing.
-     * Reverted from FOC_CURRENT because UV phase ADC reads 0.000V (possibly
-     * disconnected or misconfigured), making the current PID destabilising.
-     * Tune and re-enable FOC_CURRENT once ADC readings are verified. */
-    motor->torque_controller = VOLTAGE;
+    /* --- Step 6: Configure FOC_CURRENT torque mode ----------------------- */
+    motor->torque_controller = FOC_CURRENT;
     motor->current_limit     = 0.8f;
 
     motor->pid_current_q.p     = 0.5f;
@@ -408,7 +310,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     pid_controller_reset(&motor->pid_current_d);
     motor->current.d = 0.0f;
     motor->current.q = 0.0f;
-    printk("   [OK] VOLTAGE torque mode configured (Ilim=%.1f A)\n",
+    printk("   [OK] FOC_CURRENT torque mode configured (Ilim=%.1f A)\n",
            motor->current_limit);
 
     printk("================================================\n");
@@ -418,7 +320,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     motor->target = 0.0f; /* Start with zero current */
 
-    /* Settle motor at zero torque after calibration */
+    /* Settle motor at zero torque so ADC sees true zero before calibration */
     for (int i = 0; i < 100; i++)
     {
         bldc_motor_loop_foc(motor);
@@ -428,10 +330,14 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     k_msleep(500);
 
-    /* Calibrate zero-current ADC offsets (motor stopped, zero torque).
-     * Must happen AFTER FOC init and settle so TIM1 TRGO is running and
-     * no current is flowing — mirrors SimpleFOC calibrateOffsets(). */
-    adc_calibrate_offsets();
+    /* --- Step 7: Calibrate ADC zero-current offsets ----------------------
+     * Motor is stopped and zero torque is commanded.  TIM1 TRGO is already
+     * running so the injected ADC conversions are being triggered.
+     * Mirrors SimpleFOC calibrateOffsets() — averages 2000 samples.        */
+    printk("7. Calibrating current-sense offsets...\n");
+    low_side_cs_calibrate_offsets(&g_cs);
+    printk("   [OK] Offsets: Ia=%.4f A  Ic=%.4f A\n",
+           (double)g_cs.offset_ia, (double)g_cs.offset_ic);
 
     /* Store start angle for relative position calculation */
     uint16_t startup_raw = 0;
@@ -467,9 +373,6 @@ void haptic_loop(bldc_motor_t *motor)
     //sensor_update(motor->sensor);
     //bldc_motor_loop_foc(motor);
     //bldc_motor_move(motor, motor->voltage_limit);
-
-        /* Snímej hodnoty z ADC (faze W a U+V) */
-        adc_read_phases();
 
         float target_voltage;
         float voltage_filter_alpha = 0.8f;
@@ -553,27 +456,23 @@ void haptic_loop(bldc_motor_t *motor)
 
             last_voltage = target_voltage;
 
-            /* Cílový proud: target_voltage nyní odpovídá žádanému q-proudu [A] */
+            /* Cílový proud: target_voltage odpovídá žádanému q-proudu [A] */
             float target_current = target_voltage * HAPTIC_OUTPUT_GAIN;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            /* Nastaví naměřené fázové proudy do struktury motoru.
-             * bldc_motor_loop_foc() z nich provede Clarke + Park + PID interně
-             * (stejně jako SimpleFOC loopFOC() s TorqueControlType::foc_current). */
-            motor->current_a = phase_uv_current;                        /* Ia – fáze U */
-            motor->current_b = -(phase_uv_current + phase_w_current);   /* Ib – z KCL */
-
+            /* low_side_cs_get_phase_currents() is called inside bldc_motor_loop_foc()
+             * via motor->current_sense — no manual current_a/b assignment needed. */
             bldc_motor_move(motor, target_current);  /* set current_sp / voltage_sp */
-            bldc_motor_loop_foc(motor);              /* execute FOC */
+            bldc_motor_loop_foc(motor);              /* execute FOC (reads currents internally) */
 
-            /* Debug: print live ADC current readings every 500 ms */
+            /* Debug: print live current readings every 500 ms */
             static int64_t last_adc_dbg = 0;
             int64_t now_adc = k_uptime_get();
             if (now_adc - last_adc_dbg > 500) {
-                printk("[CS] W=%.4f A  UV=%.4f A  Ia=%.4f A  Ib=%.4f A\n",
-                       (double)phase_w_current, (double)phase_uv_current,
-                       (double)motor->current_a, (double)motor->current_b);
+                printk("[CS] Ia=%.4f A  Ib=%.4f A  Iq=%.4f A  Id=%.4f A\n",
+                       (double)motor->current_a, (double)motor->current_b,
+                       (double)motor->current.q, (double)motor->current.d);
                 last_adc_dbg = now_adc;
             }
     //    }

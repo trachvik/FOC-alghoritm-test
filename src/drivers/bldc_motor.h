@@ -8,7 +8,10 @@
 /* Forward declarations */
 typedef struct bldc_driver bldc_driver_t;
 typedef struct sensor sensor_t;
-//typedef struct current_sense current_sense_t;
+
+/* Current sense — concrete type lives in low_side_cs.h */
+#include "low_side_cs.h"
+typedef low_side_cs_t current_sense_t;
 
 /* Constants */
 #define NOT_SET -12345.0f
@@ -177,7 +180,7 @@ typedef struct {
     /* Hardware links */
     bldc_driver_t *driver;
     sensor_t *sensor;
-    //current_sense_t *current_sense;
+    current_sense_t *current_sense;   /* NULL = no current sense linked */
     
     /* Open loop variables */
     //long open_loop_timestamp;
@@ -212,12 +215,14 @@ void bldc_motor_link_driver(bldc_motor_t *motor, bldc_driver_t *driver);
 void bldc_motor_link_sensor(bldc_motor_t *motor, sensor_t *sensor);
 
 /**
- * Link current sense to motor
- * 
+ * Link current sense to motor.
+ * After linking, call low_side_cs_init() then low_side_cs_calibrate_offsets()
+ * before switching torque_controller to FOC_CURRENT.
+ *
  * @param motor Pointer to motor structure
- * @param current_sense Pointer to current sense structure
+ * @param cs    Pointer to initialised low_side_cs_t
  */
-//void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *current_sense);
+void bldc_motor_link_current_sense(bldc_motor_t *motor, current_sense_t *cs);
 
 /**
  * Initialize motor hardware
