@@ -22,8 +22,10 @@ extern void sensor_update(sensor_t *sensor);
 extern float sensor_get_angle(sensor_t *sensor);
 
 #define NUM_STEPS 8
-#define SUPPLY_VOLTAGE 5.0f
- #define HAPTIC_OUTPUT_GAIN 2.0f
+/* 1S Li-ion: max 4.2 V (plný náboj), nominál 3.7 V.
+ * Voltage limit pro FOC PID omezovač = maximální napětí sběrnice.
+ * Nastaveno na 4.2 V aby PID nepožadoval víc, než může invertor dodat. */
+#define SUPPLY_VOLTAGE       4.2f
 #define HAPTIC_VOLTAGE_LIMIT SUPPLY_VOLTAGE
 
 /* PWM pin definitions for 6PWM BLDC driver */
@@ -41,6 +43,12 @@ extern float sensor_get_angle(sensor_t *sensor);
 #define MOTOR_PHASE_RESISTANCE 5.6f /* Ohms */
 #define MOTOR_KV_RATING 320.0f      /* rpm/V */
 #define MOTOR_INDUCTANCE 0.0001f    /* H */
+/* Torque constant: Kt = (3/2)·p·Ke_phase  [GM3506, p=11]
+ * Derived from no-load back-EMF: Kt = (3/2)·11·0.004716 = 0.0778 N·m/A_q */
+#define MOTOR_KT            0.0778f  /* N·m per A of q-axis current */
+/* S mid-rail biasem: meritelny rozsah ±0.458 A, haptic detent pouziva max ~0.32 A */
+#define HAPTIC_TORQUE_LIMIT  0.025f  /* N·m — i_q ≈ 0.32 A, v rozahu ±0.458 A */
+#define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
 
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
@@ -50,7 +58,11 @@ static const struct gpio_dt_spec user_button = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw0)
 /* ADC pro snímání proudu fází */
 #define ADC_NODE DT_NODELABEL(adc1)
 #define ADC_SHUNT_OHMS    0.120f  /* 120 mΩ shunt rezistor */
-#define ADC_AMP_GAIN      31.0f   /* zesílení zesilovače */
+#define ADC_AMP_GAIN      30.0f   /* efektivni zesílení — viz zapojeni nize:
+                                   * IN+ = shunt_top pres R1=1k a V_bias=1.65V pres R2=30k
+                                   * Rg=1k, Rf=30k → G_eff = R2/R1 × Rf/Rg / (1+R2/R1) = 30
+                                   * V_out = 30 × V_shunt + 1.65V */
+/* Meritelny rozsah: ±(V_bias / G_eff / Rshunt) = ±(1.65/30/0.12) = ±0.458 A */
 #define ADC_VREF_MV       3300U   /* 3.3V interní reference */
 /* Sampling offset after trough: TMC6300 propagation ~500 ns + settling        */
 /* 800 ns @ 100 MHz → CCR4 = 80 counts (see low_side_cs.c for derivation)     */
@@ -113,7 +125,7 @@ static void adc_init(void)
 static float start_angle = 0.0f;
 static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
-static float last_voltage = 0.0f;
+static float last_torque = 0.0f;
 static int step_count = 0;
 
 /* FOC control loop thread - triggered by k_timer at 10 kHz */
@@ -202,22 +214,46 @@ int haptic_update_num_steps_from_button(void)
     return current_num_steps;
 }
 
+/* Pomocna funkce: blikne LED N-krat (bezpecne i z kontextu haptic_init) */
+static void _led_blink_n(int n)
+{
+    const struct device *gpioc = DEVICE_DT_GET(DT_NODELABEL(gpioc));
+    if (!device_is_ready(gpioc)) return;
+    gpio_pin_configure(gpioc, 13, GPIO_OUTPUT);
+    k_msleep(400); /* pauza pred sekvenci */
+    for (int i = 0; i < n; i++) {
+        gpio_pin_set(gpioc, 13, 0); /* LED ON (active low) */
+        k_msleep(200);
+        gpio_pin_set(gpioc, 13, 1); /* LED OFF */
+        k_msleep(200);
+    }
+    k_msleep(600); /* pauza po sekvenci */
+}
+
 int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 {
+    printk("[haptic_init] entered\n");
+    k_msleep(200);
     bldc_driver_6pwm_t *driver_6pwm = (bldc_driver_6pwm_t *)driver;
     struct as5048a_device *as5048a = (struct as5048a_device *)encoder;
 
     /* --- Step 1: AS5048A encoder ----------------------------------------- */
+    _led_blink_n(1);  /* 1 blik = dosli jsme sem */
     printk("1. Initializing AS5048A encoder...\n");
+    k_msleep(50);
     if (as5048a_init(as5048a, &as5048a_spi) < 0)
     {
         printk("   ERROR: Failed to initialize AS5048A: %d\n", -1);
+        k_msleep(50);
         return -1;
     }
     printk("   [OK] AS5048A ready\n\n");
+    k_msleep(50);
 
     /* --- Step 2: 6PWM driver (TIM1 low-side, TIM3 high-side) ------------- */
+    _led_blink_n(2);  /* 2 bliky = AS5048A OK */
     printk("2. Initializing 6PWM driver...\n");
+    k_msleep(50);
     bldc_driver_6pwm_init_struct(driver_6pwm,
                                  PWM_AH_PIN, PWM_AL_PIN,
                                  PWM_BH_PIN, PWM_BL_PIN,
@@ -232,14 +268,18 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     if (bldc_driver_6pwm_init_hw(driver_6pwm) != DRIVER_INIT_OK)
     {
         printk("   ERROR: Failed to initialize driver\n");
+        k_msleep(50);
         return -1;
     }
     printk("   [OK] Driver initialized\n\n");
+    k_msleep(50);
 
     /* --- Step 3: Low-side current sense (mirrors SimpleFOC LowsideCS) -----
      * Must be called AFTER bldc_driver_6pwm_init_hw() so that TIM1 is
      * running before low_side_cs_init() reconfigures CR1/BDTR/CCR4.        */
     printk("3. Initializing low-side current sense...\n");
+    _led_blink_n(3);  /* 3 bliky = driver OK */
+    k_msleep(50);
     /* Pin-mux via Zephyr ADC driver (must happen before register access) */
     adc_init();
 
@@ -251,12 +291,16 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     if (!low_side_cs_init(&g_cs))
     {
         printk("   ERROR: low_side_cs_init failed\n");
+        k_msleep(50);
         return -1;
     }
     printk("   [OK] Current sense ready (center-aligned TIM1, CCR4 trigger)\n\n");
+    k_msleep(50);
 
     /* --- Step 4: BLDC Motor ----------------------------------------------- */
     printk("4. Initializing BLDC motor...\n");
+    _led_blink_n(4);  /* 4 bliky = current sense OK */
+    k_msleep(50);
     bldc_motor_init_struct(motor,
                            MOTOR_POLE_PAIRS,
                            MOTOR_PHASE_RESISTANCE,
@@ -273,12 +317,15 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     if (!bldc_motor_init(motor))
     {
         printk("   ERROR: Failed to initialize motor\n");
+        k_msleep(50);
         return -1;
     }
     printk("   [OK] Motor initialized\n\n");
+    k_msleep(50);
 
     /* --- Step 5: FOC sensor calibration ---------------------------------- */
     printk("5. Running FOC calibration (sensor alignment)...\n");
+    _led_blink_n(5);  /* 5 bliku = motor OK */
     k_msleep(1000);
 
     if (!bldc_motor_init_foc(motor))
@@ -291,7 +338,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
 
     /* --- Step 6: Configure FOC_CURRENT torque mode ----------------------- */
     motor->torque_controller = FOC_CURRENT;
-    motor->current_limit     = 0.8f;
+    motor->current_limit     = MOTOR_CURRENT_LIMIT;     /* 0.8 A — bezpecny limit ADC rozsahu */
 
     motor->pid_current_q.p     = 0.5f;
     motor->pid_current_q.i     = 20.0f;
@@ -374,8 +421,8 @@ void haptic_loop(bldc_motor_t *motor)
     //bldc_motor_loop_foc(motor);
     //bldc_motor_move(motor, motor->voltage_limit);
 
-        float target_voltage;
-        float voltage_filter_alpha = 0.8f;
+        float target_torque;
+        float torque_filter_alpha = 0.8f;
 
         //int num_steps = haptic_update_num_steps_from_button();
         int num_steps = NUM_STEPS;
@@ -439,25 +486,26 @@ void haptic_loop(bldc_motor_t *motor)
             bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
                                              PHASE_ON, PHASE_ON, PHASE_ON);
 
+            /* Haptic detent: sinusový profil točivého momentu [N·m] → i_q = T / Kt */
             float norm_pos = between_steps_pos / step_size;
-            target_voltage = -motor->current_limit * 0.2f * sinf(_2PI * norm_pos);
+            target_torque = -HAPTIC_TORQUE_LIMIT * sinf(_2PI * norm_pos);
 
             float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
 
             if (dist < 0.05f) {
-                target_voltage = 0.0f;
+                target_torque = 0.0f;
             } else if (dist < 0.15f) {
                 float scale = (dist - 0.05f) / 0.1f;
-                target_voltage *= scale;
+                target_torque *= scale;
             }
 
             float scaling_factor = 0.3f;
-            target_voltage = voltage_filter_alpha * target_voltage + (1.0f - voltage_filter_alpha) * last_voltage * scaling_factor;
+            target_torque = torque_filter_alpha * target_torque + (1.0f - torque_filter_alpha) * last_torque * scaling_factor;
 
-            last_voltage = target_voltage;
+            last_torque = target_torque;
 
-            /* Cílový proud: target_voltage odpovídá žádanému q-proudu [A] */
-            float target_current = target_voltage * HAPTIC_OUTPUT_GAIN;
+            /* Prevod: tocivý moment → q-osa proud  i_q = T / Kt [A] */
+            float target_current = target_torque / MOTOR_KT;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
@@ -470,9 +518,10 @@ void haptic_loop(bldc_motor_t *motor)
             static int64_t last_adc_dbg = 0;
             int64_t now_adc = k_uptime_get();
             if (now_adc - last_adc_dbg > 500) {
-                printk("[CS] Ia=%.4f A  Ib=%.4f A  Iq=%.4f A  Id=%.4f A\n",
+                printk("[CS] T=%.4f Nm  Iq_sp=%.3f A  Ia=%.4f A  Ib=%.4f A  Iq=%.4f A\n",
+                       (double)target_torque, (double)target_current,
                        (double)motor->current_a, (double)motor->current_b,
-                       (double)motor->current.q, (double)motor->current.d);
+                       (double)motor->current.q);
                 last_adc_dbg = now_adc;
             }
     //    }

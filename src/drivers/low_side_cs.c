@@ -123,73 +123,57 @@ void low_side_cs_init_struct(low_side_cs_t *cs,
  * ------------------------------------------------------------------------- */
 static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
 {
-    /* 1. Disable timer temporarily */
-    TIM1->CR1 &= ~TIM_CR1_CEN;
+    /*
+     * Strategy: do NOT stop TIM1 or reset it via RCC.  Stopping TIM1 while
+     * Zephyr's 6PWM driver owns it causes a hard-fault (Zephyr IRQ handler
+     * sees the timer in an unexpected state).
+     *
+     * CCMR2, CCER, CCR4 and CR2 can all be written safely while the timer
+     * is running (CEN=1).  We only add CH4 as an internal compare output
+     * (no GPIO) to generate OC4REF, which is routed to TRGO via MMS=0b111.
+     * ADC injected trigger: JEXTSEL=0b0001 = TIM1_TRGO.
+     *
+     * TIM1 remains in whichever mode the 6PWM driver left it (edge-aligned,
+     * ARR = f_CLK/f_PWM - 1).  Sampling at CCR4 counts from period start is
+     * valid for low-side current sense as long as CCR4 < min(CCRx) of any
+     * active phase (i.e. within the guaranteed all-low-side-on window).
+     */
 
-    /* 2. Centre-aligned mode 1 (CMS = 01): OC flags set on down-count only.
-     *    This means CCR4 compare fires when CNT counts UP from 0, which is
-     *    exactly at the trough + offset — the safe shunt sampling window. */
-    TIM1->CR1 = (TIM1->CR1 & ~TIM_CR1_CMS_Msk)
-              | TIM_CR1_CMS_0;           /* CMS = 01 = centre-aligned mode 1 */
+    /* Read actual ARR — do NOT change it */
+    uint32_t tim1_arr = TIM1->ARR;
+    uint32_t offset_counts = (uint32_t)(
+        ((uint64_t)offset_trough_ns * TIM1_CLOCK_HZ) / 1000000000ULL);
+    if (offset_counts == 0U) offset_counts = 1U;
+    if (offset_counts > tim1_arr / 4U) offset_counts = tim1_arr / 4U;
 
-    /* 3. Set ARR for 25 kHz.  ARR is already 2000 from Zephyr's edge-aligned
-     *    init (period_ns / 10 ns = 40000 ns / 10 ns = 4000 half-period, but
-     *    edge-aligned ARR = f_CLK/f_PWM - 1 = 3999).  We overwrite it to the
-     *    correct centre-aligned value. */
-    TIM1->ARR = TIM1_ARR - 1U;          /* ARR = 1999 → 25 kHz centre-aligned */
+    printk("[TIM1] CEN=%u ARR=%u, target CCR4=%u (offset %u ns)\n",
+           (unsigned)!!(TIM1->CR1 & TIM_CR1_CEN),
+           (unsigned)tim1_arr, (unsigned)offset_counts,
+           (unsigned)offset_trough_ns);
+    k_msleep(30);
 
-    /* 4. Dead-time and MOE (Main Output Enable) in BDTR.
-     *    DTG[7:0] = 50 (0x32): t_DT = 50 × 10 ns = 500 ns.
-     *    DTG[7:5] = 000 → formula: t_DT = DTG[7:0] × t_DTS = DTG × 10 ns.
-     *    OSSR=1: off-state for complementary outputs — outputs low when MOE=0.
-     *    LOCK=00: no register lock (we may still tune PID gains at runtime). */
-    TIM1->BDTR = (TIM1->BDTR & ~(TIM_BDTR_DTG_Msk | TIM_BDTR_LOCK_Msk))
-               | BDTR_DTG_500NS          /* DTG = 50 → 500 ns dead-time      */
-               | TIM_BDTR_OSSR          /* off-state safety                  */
-               | TIM_BDTR_MOE;          /* main output enable                */
-
-    /* 5. Configure CH4 as internal PWM output (no GPIO, CCxP not relevant).
-     *    PWM mode 1: OC4REF high while CNT < CCR4 → pulse at trough rising
-     *    edge gives us the trigger exactly when we want it.
-     *    CC4S = 00 (output), OC4M = 110 (PWM mode 1), OC4PE = 0 (preload off
-     *    → CCR4 takes effect immediately when we write it). */
+    /* CH4: output compare, PWM mode 1, no preload, CC4 GPIO output disabled.
+     * OC4REF = 1 while CNT < CCR4 → rising edge at CNT==0 (period start). */
+    printk("[TIM1] CCMR2...\n"); k_msleep(30);
     TIM1->CCMR2 = (TIM1->CCMR2
                    & ~(TIM_CCMR2_CC4S_Msk | TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE))
-                | (0b110U << TIM_CCMR2_OC4M_Pos);  /* PWM mode 1 */
+                | (0b110U << TIM_CCMR2_OC4M_Pos);   /* PWM mode 1 */
 
-    /* Disable CH4 GPIO output — we only need the internal OC4REF signal.    */
-    TIM1->CCER &= ~TIM_CCER_CC4E;
+    printk("[TIM1] CCER...\n"); k_msleep(30);
+    TIM1->CCER &= ~TIM_CCER_CC4E;   /* no GPIO output */
 
-    /* 6. CCR4 = offset_counts.
-     *    offset_counts = offset_ns × f_CLK / 1e9
-     *    800 ns × 100 MHz / 1e9 = 80 counts.
-     *    CCR4 = 0 would trigger at the very trough; we add the offset to wait
-     *    for the driver propagation delay + switching noise to settle. */
-    uint32_t offset_counts = (uint32_t)(((uint64_t)offset_trough_ns * TIM1_CLOCK_HZ) / 1000000000ULL);
-    if (offset_counts == 0) offset_counts = 1;       /* never trigger at CNT=0 */
-    if (offset_counts >= TIM1_ARR) offset_counts = TIM1_ARR / 4U;
+    printk("[TIM1] CCR4=%u...\n", (unsigned)offset_counts); k_msleep(30);
     TIM1->CCR4 = offset_counts;
 
-    /* 7. Route TRGO to OC4REF so the ADC injected group can use it.
-     *    RM0383 Table 61: MMS = 0b111 → OC4REF → TRGO.
-     *    ADC JEXTSEL must then be set to TIM1_TRGO (0b0001) instead of
-     *    TIM1_CH4 (0b0000), because the injected external trigger mux on
-     *    STM32F411 maps the *TRGO* signal, not the raw OC4REF.             */
+    /* Route OC4REF → TRGO so ADC injected trigger (JEXTSEL=TIM1_TRGO) fires
+     * once per PWM period at the current-sense sampling point.             */
+    printk("[TIM1] CR2 MMS=OC4REF...\n"); k_msleep(30);
     TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
-              | (0b111U << TIM_CR2_MMS_Pos);   /* MMS = OC4REF → TRGO       */
+              | (0b111U << TIM_CR2_MMS_Pos);   /* MMS=111 → OC4REF → TRGO */
 
-    /* 8. Force update event to reload ARR/CCR4 into shadow registers, then
-     *    clear the UIF flag so we don't get a spurious update interrupt.   */
-    TIM1->EGR  = TIM_EGR_UG;
-    TIM1->SR  &= ~TIM_SR_UIF;
-
-    /* 9. Re-enable timer */
-    TIM1->CR1 |= TIM_CR1_CEN;
-
-    printk("[CS-HW] TIM1 centre-aligned: ARR=%u, CCR4=%u (offset %u ns), "
-           "DTG=%u (500 ns), MMS=OC4REF→TRGO\n",
+    printk("[CS-HW] TIM1 CH4/TRGO OK: ARR=%u CCR4=%u offset_ns=%u\n",
            (unsigned)TIM1->ARR, (unsigned)TIM1->CCR4,
-           (unsigned)offset_trough_ns, (unsigned)BDTR_DTG_500NS);
+           (unsigned)offset_trough_ns);
 }
 
 /* ---------------------------------------------------------------------------
@@ -203,17 +187,33 @@ static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
  * ------------------------------------------------------------------------- */
 static void _configure_adc_injected(void)
 {
+    printk("[ADC] checking device ready...\n"); k_msleep(30);
     /* Pin-mux via Zephyr (must be done before touching registers) */
     if (!device_is_ready(adc_dev)) {
         printk("[CS-HW] ADC device not ready!\n");
         return;
     }
+    printk("[ADC] ch0 setup...\n"); k_msleep(30);
     adc_channel_setup(adc_dev, &ch0_cfg);
+    printk("[ADC] ch1 setup...\n"); k_msleep(30);
     adc_channel_setup(adc_dev, &ch1_cfg);
 
-    /* Power down ADC to safely change JEXTSEL / JSQR */
-    ADC1->CR2 &= ~ADC_CR2_ADON;
+    /*
+     * Do NOT power-cycle the ADC (ADON=0 then ADON=1).
+     * Zephyr's STM32 ADC driver may use DMA; turning ADON off while DMA is
+     * active generates a DMA error interrupt → hard fault.
+     * On STM32F4, injected sequence registers (JSQR, CR2.JEXTSEL/JEXTEN) can
+     * be written safely while ADON=1 as long as no injected conversion is
+     * currently in progress (which is guaranteed here — we haven't triggered
+     * any).
+     *
+     * JEOCIE is intentionally left disabled: _read_adc_raw() polls SR.JEOC,
+     * so no interrupt is needed.  Enabling JEOCIE without a Zephyr-registered
+     * ISR entry would cause an unhandled-interrupt fault the first time the
+     * injected group completes.
+     */
 
+    printk("[ADC] writing JSQR...\n"); k_msleep(30);
     /* Injected sequence: 2 conversions
      *   JL = 1 (value 1 → 2 conversions)
      *   JSQ3 = CH0 (PA0, phase W / Ic)  → result in JDR1
@@ -222,19 +222,16 @@ static void _configure_adc_injected(void)
                | (0U        << ADC_JSQR_JSQ3_Pos)
                | (1U        << ADC_JSQR_JSQ4_Pos);
 
-    /* External trigger: TIM1_TRGO (JEXTSEL=0b0001), rising edge (JEXTEN=01) */
+    printk("[ADC] writing CR2 JEXTSEL...\n"); k_msleep(30);
+    /* External trigger: TIM1_TRGO (JEXTSEL=0b0001), rising edge (JEXTEN=01)
+     * TIM1_TRGO now carries OC4REF thanks to MMS=0b111 set in
+     * _configure_tim1_center_aligned().                                    */
     ADC1->CR2 = (ADC1->CR2 & ~(ADC_CR2_JEXTSEL_Msk | ADC_CR2_JEXTEN_Msk))
-              | (1U << ADC_CR2_JEXTSEL_Pos)    /* 0b0001 = TIM1_TRGO        */
+              | (1U << ADC_CR2_JEXTSEL_Pos)   /* 0b0001 = TIM1_TRGO        */
               | ADC_CR2_JEXTEN_0;             /* rising edge               */
 
-    /* Enable JEOC interrupt so the FOC ISR is invoked when conversion done  */
-    ADC1->CR1 |= ADC_CR1_JEOCIE;
-
-    /* Power ADC back on */
-    ADC1->CR2 |= ADC_CR2_ADON;
-
     printk("[CS-HW] ADC1 injected: CH0=PA0(Ic/W) CH1=PA1(Ia/UV) "
-           "trigger=TIM1_TRGO(OC4REF) JEOC IRQ enabled\n");
+           "trigger=TIM1_TRGO JEOC polled\n");
 }
 
 /* ---------------------------------------------------------------------------
