@@ -222,16 +222,11 @@ static void _configure_adc_injected(void)
                | (0U        << ADC_JSQR_JSQ3_Pos)
                | (1U        << ADC_JSQR_JSQ4_Pos);
 
-    printk("[ADC] writing CR2 JEXTSEL...\n"); k_msleep(30);
-    /* External trigger: TIM1_TRGO (JEXTSEL=0b0001), rising edge (JEXTEN=01)
-     * TIM1_TRGO now carries OC4REF thanks to MMS=0b111 set in
-     * _configure_tim1_center_aligned().                                    */
-    ADC1->CR2 = (ADC1->CR2 & ~(ADC_CR2_JEXTSEL_Msk | ADC_CR2_JEXTEN_Msk))
-              | (1U << ADC_CR2_JEXTSEL_Pos)   /* 0b0001 = TIM1_TRGO        */
-              | ADC_CR2_JEXTEN_0;             /* rising edge               */
-
-    printk("[CS-HW] ADC1 injected: CH0=PA0(Ic/W) CH1=PA1(Ia/UV) "
-           "trigger=TIM1_TRGO JEOC polled\n");
+    printk("[ADC] setting up channels via Zephyr API...\n"); k_msleep(30);
+    /* Only need Zephyr channel setup for pin-mux (MODER=analog, SMPR, SQR).
+     * All further reads use adc_read() so we do NOT touch CR2/JSQR manually.
+     * Zephyr's STM32 ADC driver owns CR2; raw JSWSTART writes conflict. */
+    printk("[CS-HW] ADC1 using Zephyr adc_read() — no raw CR2/JSQR writes\n");
 }
 
 /* ---------------------------------------------------------------------------
@@ -249,21 +244,37 @@ int low_side_cs_init(low_side_cs_t *cs)
 }
 
 /* ---------------------------------------------------------------------------
- * _read_adc_raw — helper: wait for JEOC + return raw JDR values.
- * Timeout after one full PWM period (40 µs → 200 busy-wait steps of 1 µs).
- * Returns true if a valid conversion was captured.
+ * Zephyr adc_read() sequences — one per channel to avoid DR overrun.
+ * STM32F4 has a single shared DR register; reading 2 channels in one
+ * sequence without DMA causes OVR (CH1 overwrites CH0 before ISR reads it).
+ * Two separate single-channel reads avoids this entirely.
+ * ------------------------------------------------------------------------- */
+static int16_t s_buf_ic;   /* CH0 / PA0 / phase W  (Ic) */
+static int16_t s_buf_ia;   /* CH1 / PA1 / phase UV (Ia) */
+
+static struct adc_sequence s_seq_ic = {
+    .channels    = BIT(0),
+    .buffer      = &s_buf_ic,
+    .buffer_size = sizeof(s_buf_ic),
+    .resolution  = 12,
+};
+static struct adc_sequence s_seq_ia = {
+    .channels    = BIT(1),
+    .buffer      = &s_buf_ia,
+    .buffer_size = sizeof(s_buf_ia),
+    .resolution  = 12,
+};
+
+/* ---------------------------------------------------------------------------
+ * _read_adc_raw — read both shunt channels (sequential single-channel reads).
+ * Returns true on success.
  * ------------------------------------------------------------------------- */
 static bool _read_adc_raw(uint16_t *raw_ic, uint16_t *raw_ia)
 {
-    for (int t = 0; t < 200; t++) {
-        if (ADC1->SR & ADC_SR_JEOC) break;
-        k_busy_wait(1);
-    }
-    if (!(ADC1->SR & ADC_SR_JEOC)) return false;
-
-    ADC1->SR &= ~ADC_SR_JEOC;
-    *raw_ic = (uint16_t)(ADC1->JDR1 & 0x0FFFU);  /* Phase W  (Ic) */
-    *raw_ia = (uint16_t)(ADC1->JDR2 & 0x0FFFU);  /* Phase UV (Ia) */
+    if (adc_read(adc_dev, &s_seq_ic) != 0) return false;
+    if (adc_read(adc_dev, &s_seq_ia) != 0) return false;
+    *raw_ic = (uint16_t)s_buf_ic;   /* PA0 = phase W  (Ic) */
+    *raw_ia = (uint16_t)s_buf_ia;   /* PA1 = phase UV (Ia) */
     return true;
 }
 
@@ -291,6 +302,14 @@ void low_side_cs_calibrate_offsets(low_side_cs_t *cs)
 
     printk("[CS] Calibrating zero-current offsets (%d samples)...\n",
            ADC_CALIBRATION_ROUNDS);
+
+    /* Diagnostic: first 3 raw samples to verify ADC is actually reading */
+    for (int d = 0; d < 3; d++) {
+        uint16_t r_ic, r_ia;
+        bool ok = _read_adc_raw(&r_ic, &r_ia);
+        printk("[CS] diag[%d]: ok=%d CH0(Ic)=%u CH1(Ia)=%u\n",
+               d, (int)ok, (unsigned)r_ic, (unsigned)r_ia);
+    }
 
     for (int i = 0; i < ADC_CALIBRATION_ROUNDS; i++) {
         uint16_t raw_ic, raw_ia;
@@ -325,14 +344,30 @@ phase_current_t low_side_cs_get_phase_currents(low_side_cs_t *cs)
 {
     if (!cs || !cs->initialized) return s_last_current;
 
-    if (!(ADC1->SR & ADC_SR_JEOC)) {
-        return s_last_current;   /* not ready; reuse previous sample */
-    }
+    /* --- Synchronize to the low-side-on sampling window -------------------
+     * TIM1 (edge-aligned up-counter, 25 kHz) drives the 3 low-side FETs via
+     * CH1/CH2/CH3 in PWM mode 1.  All three low-sides are ON simultaneously
+     * during the interval CNT ∈ [0, min(CCR1,CCR2,CCR3)].
+     *
+     * At the maximum haptic duty (0.32 A × 5.6 Ω = 1.79 V on a 4.2 V bus),
+     * max high-side duty ≈ 43 %, so the simultaneous ON window is ≥ 57 % of
+     * the 40 µs period ≈ 23 µs = 2300 TIM1 counts.
+     *
+     * Strategy: spin until CNT < 200 (2 µs from period start), then do both
+     * adc_read() calls (~2 µs each).  Both reads finish at CNT ≈ 600, well
+     * inside the 2300-count window.  Worst-case spin = one PWM period = 40 µs.
+     * ---------------------------------------------------------------------- */
+    uint32_t cnt;
+    do { cnt = TIM1->CNT; } while (cnt > 200U);
 
-    ADC1->SR &= ~ADC_SR_JEOC;
+    if (adc_read(adc_dev, &s_seq_ic) != 0) return s_last_current;
+    if (adc_read(adc_dev, &s_seq_ia) != 0) return s_last_current;
 
-    uint16_t raw_ic = (uint16_t)(ADC1->JDR1 & 0x0FFFU);   /* Ic = phase W  */
-    uint16_t raw_ia = (uint16_t)(ADC1->JDR2 & 0x0FFFU);   /* Ia = phase UV */
+    uint16_t raw_ic = (uint16_t)s_buf_ic;   /* Ic = phase W  */
+    uint16_t raw_ia = (uint16_t)s_buf_ia;   /* Ia = phase UV */
+
+    cs->last_raw_ic = (int16_t)raw_ic;
+    cs->last_raw_ia = (int16_t)raw_ia;
 
     float V_ic = _raw_to_volts(raw_ic, cs->vref, cs->adc_full_scale);
     float V_ia = _raw_to_volts(raw_ia, cs->vref, cs->adc_full_scale);

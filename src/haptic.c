@@ -331,29 +331,16 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     }
     printk("   [OK] FOC calibration complete!\n\n");
 
-    /* --- Step 6: Configure FOC_CURRENT torque mode ----------------------- */
-    motor->torque_controller = FOC_CURRENT;
-    motor->current_limit     = MOTOR_CURRENT_LIMIT;     /* 0.8 A — bezpecny limit ADC rozsahu */
-
-    motor->pid_current_q.p     = 0.5f;
-    motor->pid_current_q.i     = 20.0f;
-    motor->pid_current_q.d     = 0.0f;
-    motor->pid_current_q.limit = motor->voltage_limit;
-
-    motor->pid_current_d.p     = 0.5f;
-    motor->pid_current_d.i     = 20.0f;
-    motor->pid_current_d.d     = 0.0f;
-    motor->pid_current_d.limit = motor->voltage_limit;
-
-    motor->lpf_current_q.tf = 0.005f;
-    motor->lpf_current_d.tf = 0.005f;
-
-    pid_controller_reset(&motor->pid_current_q);
-    pid_controller_reset(&motor->pid_current_d);
-    motor->current.d = 0.0f;
-    motor->current.q = 0.0f;
-    printk("   [OK] FOC_CURRENT torque mode configured (Ilim=%.1f A)\n",
-           motor->current_limit);
+    /* VOLTAGE mode: FOC s přímo nastaveným napětím Vq = Iq × R_phase.
+     * FOC_CURRENT vyžaduje synchronizované komplementární PWM (TIM1 CH+CHN)
+     * pro spolehlivé snímání proudu low-side shunty. Současná konfigurace
+     * (TIM1 low-side + TIM3 high-side nesynchronizovaně) proudové snímání
+     * neumožňuje — Iq_meas je vždy ≈0 → PID integruje na Vmax → motor uteče.
+     * VOLTAGE mode je pro haptické aplikace (<5 rad/s) plně dostačující. */
+    motor->torque_controller = VOLTAGE;
+    motor->current_limit     = MOTOR_CURRENT_LIMIT;
+    printk("   [OK] VOLTAGE torque mode (Vq = Iq * R=%.1f ohm, Ilim=%.2f A)\n",
+           (double)MOTOR_PHASE_RESISTANCE, (double)MOTOR_CURRENT_LIMIT);
 
     printk("================================================\n");
     printk("  System Ready - Motor Status: %d\n", motor->motor_status);
@@ -465,14 +452,17 @@ void haptic_loop(bldc_motor_t *motor)
                 if (target_current < -motor->current_limit) target_current = -motor->current_limit;
             }
 
-            last_torque = 0.0f;   /* reset pro plynuly prechod do detent modu */
-            bldc_motor_move(motor, target_current);
+            last_torque = 0.0f;
+            /* Vq = Iq × R_phase (přímé napěťové řízení, bez proudové zpětné vazby) */
+            float target_voltage = target_current * MOTOR_PHASE_RESISTANCE;
+            if (target_voltage >  motor->voltage_limit) target_voltage =  motor->voltage_limit;
+            if (target_voltage < -motor->voltage_limit) target_voltage = -motor->voltage_limit;
+            bldc_motor_move(motor, target_voltage);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[SMOOTH] vel=%.2f rad/s  Iq_sp=%.3f A  PA3=%u\n",
-                       (double)vel, (double)target_current,
-                       (unsigned)((GPIOA->IDR >> 3) & 1U));
+                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  Vq=%.3f V\n",
+                       (double)vel, (double)target_current, (double)target_voltage);
             }
 
         } else {
@@ -502,13 +492,16 @@ void haptic_loop(bldc_motor_t *motor)
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            bldc_motor_move(motor, target_current);
+            /* Vq = Iq × R_phase (přímé napěťové řízení, bez proudové zpětné vazby) */
+            float target_voltage = target_current * MOTOR_PHASE_RESISTANCE;
+            if (target_voltage >  motor->voltage_limit) target_voltage =  motor->voltage_limit;
+            if (target_voltage < -motor->voltage_limit) target_voltage = -motor->voltage_limit;
+            bldc_motor_move(motor, target_voltage);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[DETENT] steps=%d  Iq=%.3f A  PA3=%u\n",
-                       num_steps, (double)target_current,
-                       (unsigned)((GPIOA->IDR >> 3) & 1U));
+                printk("[DETENT] steps=%d  Iq=%.3f A  Vq=%.3f V\n",
+                       num_steps, (double)target_current, (double)target_voltage);
             }
         }
 }

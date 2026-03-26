@@ -69,6 +69,10 @@ typedef struct {
     float offset_ia;
     float offset_ic;
 
+    /* Last raw ADC counts (updated each get_phase_currents call) */
+    int16_t last_raw_ic;   /* CH0 / PA0 */
+    int16_t last_raw_ia;   /* CH1 / PA1 */
+
     /* true after successful init + calibration */
     bool initialized;
 

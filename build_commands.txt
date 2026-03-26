@@ -27,3 +27,53 @@ west build -t clean
 
 #Serial monitor:
 sudo cat /dev/ttyACM0
+
+
+
+[DETENT] steps=20  Iq=-0.076 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=0.256 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=20  Iq=0.151 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=20  Iq=0.217 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=20  Iq=-0.238 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.000 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.138 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=20  Iq=-0.169 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=0.070 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.238 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.139 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.272 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.173 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=20  Iq=-0.267 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.008 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.215 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=0.249 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=0.260 A  Iq_meas=0.002 A  PA3=1
+[DETENT] steps=20  Iq=0.070 A  Iq_meas=0.003 A  PA3=1
+[DETENT] steps=20  Iq=0.256 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.255 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=20  Iq=0.023 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=20  Iq=-0.266 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=20  Iq=-0.208 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=20  Iq=-0.104 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=20  Iq=0.167 A  Iq_meas=-0.000 A  PA3=1
+[BTN] PRESS -> num_steps=16
+[DETENT] steps=16  Iq=-0.137 A  Iq_meas=0.000 A  PA3=0
+[DETENT] steps=16  Iq=0.265 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=16  Iq=-0.213 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=16  Iq=-0.007 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=16  Iq=-0.194 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=16  Iq=0.039 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=16  Iq=-0.203 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=16  Iq=0.256 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=16  Iq=0.235 A  Iq_meas=-0.003 A  PA3=1
+[DETENT] steps=16  Iq=0.020 A  Iq_meas=-0.004 A  PA3=1
+[DETENT] steps=16  Iq=0.229 A  Iq_meas=-0.004 A  PA3=1
+[DETENT] steps=16  Iq=0.083 A  Iq_meas=0.004 A  PA3=1
+[DETENT] steps=16  Iq=-0.094 A  Iq_meas=0.000 A  PA3=1
+[DETENT] steps=16  Iq=-0.013 A  Iq_meas=0.002 A  PA3=1
+[DETENT] steps=16  Iq=-0.002 A  Iq_meas=0.003 A  PA3=1
+[DETENT] steps=16  Iq=-0.270 A  Iq_meas=0.002 A  PA3=1
+[DETENT] steps=16  Iq=-0.139 A  Iq_meas=0.001 A  PA3=1
+[DETENT] steps=16  Iq=-0.101 A  Iq_meas=-0.000 A  PA3=1
+[DETENT] steps=16  Iq=0.218 A  Iq_meas=-0.001 A  PA3=1
+[DETENT] steps=16  Iq=-0.269 A  Iq_meas=-0.002 A  PA3=1
