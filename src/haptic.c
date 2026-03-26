@@ -312,20 +312,22 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("   [OK] FOC calibration complete!\n");
 
     /* --- Step 6: FOC_CURRENT torque mode --------------------------------- */
-    /* P = R_phase: Vq = P * (Isp - Imeas) = R*(Isp-Imeas).                 *
-     * When Imeas=0 (sensor failure): Vq = R*Isp → same as V/R open-loop.  *
-     * When Imeas works: closed current loop.  I-term limited to ±1.5 V so   *
-     * integrator windup never drives the motor uncontrollably.              */
+    /* P = R_phase → Vq = R * (Iq_sp - Iq_meas).                            *
+     * I = 0 intentionally: Iq_meas ≈ 0 (current sense not yet working), so *
+     * a non-zero I-term would wind up in the direction of the dominant      *
+     * setpoint history and create CW/CCW asymmetry.  With I=0 the output   *
+     * is Vq = R * Iq_sp — symmetric, identical to VOLTAGE mode.            *
+     * Restore I=5 once Iq_meas correctly tracks Iq_sp.                     */
     motor->torque_controller = FOC_CURRENT;
     motor->current_limit     = MOTOR_CURRENT_LIMIT;
 
     motor->pid_current_q.p     = MOTOR_PHASE_RESISTANCE;  /* V/A = Ω */
-    motor->pid_current_q.i     = 5.0f;
+    motor->pid_current_q.i     = 0.0f;   /* 0 until Iq_meas works */
     motor->pid_current_q.d     = 0.0f;
-    motor->pid_current_q.limit = 1.5f;   /* hard cap: ≤ 1.5 V from integrator */
+    motor->pid_current_q.limit = 1.5f;
 
     motor->pid_current_d.p     = MOTOR_PHASE_RESISTANCE;
-    motor->pid_current_d.i     = 5.0f;
+    motor->pid_current_d.i     = 0.0f;   /* 0 until Iq_meas works */
     motor->pid_current_d.d     = 0.0f;
     motor->pid_current_d.limit = 1.5f;
 
@@ -336,7 +338,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     pid_controller_reset(&motor->pid_current_d);
     motor->current.d = 0.0f;
     motor->current.q = 0.0f;
-    printk("   [OK] FOC_CURRENT: P=%.1f V/A  I=5  Ilim=%.2f A\n",
+    printk("   [OK] FOC_CURRENT: P=%.1f V/A  I=0 (Iq_meas broken)  Ilim=%.2f A\n",
            (double)MOTOR_PHASE_RESISTANCE, (double)MOTOR_CURRENT_LIMIT);
 
     printk("================================================\n");
