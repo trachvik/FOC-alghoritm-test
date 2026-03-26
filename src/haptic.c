@@ -49,9 +49,31 @@ extern float sensor_get_angle(sensor_t *sensor);
 /* S mid-rail biasem: meritelny rozsah ±0.458 A, haptic detent pouziva max ~0.32 A */
 #define HAPTIC_TORQUE_LIMIT  0.025f  /* N·m — i_q ≈ 0.32 A, v rozahu ±0.458 A */
 #define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
-/* Smooth mode: dampovaci koeficient [A·s/rad].  Odpor = Kd × rychlost.
- * Kd=0.004 → pri 5 rad/s (cca 48 rpm) = 0.02 A → jemny tlumeny pohyb. */
-#define SMOOTH_KD            0.004f
+/* Smooth mode: dampovaci koeficient [A·s/rad].
+ * Kd=0.025 → pri 1 rad/s = 0.025 A = 1.9 mN·m → citelny odpor pri pomalom pohybe. */
+#define SMOOTH_KD            0.002f  /* N·m/(rad/s) — tlumicí moment; 0.002/0.0778≈0.026 A/(rad/s)
+                                        * srovnatelne s HAPTIC_TORQUE_LIMIT=0.025 N·m */
+/* Detent mode: dampovaci koeficient.  Potlacuje oscilacie na hranicich kroku.
+ * Kd=0.008 → pri 5 rad/s = 0.04 A protisila; pri stani ≈0 A (bez vplyvu). */
+#define DETENT_KD            0.008f
+
+/* Anti-cogging compensation LUT
+ * ACAL_SIZE = 512 → rozlišení 2π/512 ≈ 0.7° na záznam LUT.
+ * ACAL_CAL_I  = kalibrační proud [A]; nesmí být příliš malý (motor se neroztočí)
+ *               ani příliš velký (zkreslení třením).
+ * ACAL_SAMPLE_MS = doba vzorkování [ms]; motor musí stihnout ≥2 otáčky.
+ * ACAL_GAIN   = přepočet odchylky [rad/s] → korekční proud [A].
+ *               Empiricky: ~0.5 pro GM3506, snižte pokud se motor přehřívá. */
+#define ACAL_SIZE        512
+#define ACAL_CAL_I       0.35f       /* [A] proud pro rozběh — překoná cogging při startu */
+#define ACAL_CHECK_I     0.25f       /* [A] proud při vzorkování — 0.14A nestačí překonat cogging */
+#define ACAL_SAMPLE_MS   30000       /* [ms] doba vzorkování (30 s) — třikrát více průměrování */
+#define ACAL_SMOOTH_TAP  9           /* počet sousedů: 9×0.703°=6.3° < 16.4° cogging perioda (11PP) */
+                                       /* 27-tap=19°>16.4° → ničí 88% signálu! */
+/* ACAL_GAIN: vel_deviation [rad/s] → korekční proud [A].
+ * Pomalejší kalibrace (avg~3-5 rad/s) → větší odchylky (±2-4 rad/s)
+ * → gain=0.030 dá ~0.090-0.120 A korekci. */
+#define ACAL_GAIN        0.060f
 
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
@@ -124,13 +146,43 @@ static void adc_init(void)
  *   7. motor->torque_controller = FOC_CURRENT
  */
 
+/* Anti-cogging LUT — indexováno mechanickým úhlem hřídele [0, 2π) */
+static float cogging_lut[ACAL_SIZE];
+static bool  cogging_valid = false;
+
+/* Vrátí index LUT pro daný mechanický úhel */
+static inline int _acal_idx(float angle)
+{
+    float a = angle;
+    while (a <  0.0f)  a += _2PI;
+    while (a >= _2PI)  a -= _2PI;
+    int idx = (int)(a * (float)ACAL_SIZE / _2PI);
+    if ((unsigned)idx >= (unsigned)ACAL_SIZE) idx = 0;
+    return idx;
+}
+
+/* Lineárně interpolovaná korekce z LUT [A] pro daný úhel */
+static float anticogging_ff(float angle)
+{
+    if (!cogging_valid) return 0.0f;
+    float a = angle;
+    while (a <  0.0f)  a += _2PI;
+    while (a >= _2PI)  a -= _2PI;
+    float f  = a * (float)ACAL_SIZE / _2PI;
+    int   i0 = (int)f;
+    int   i1 = (i0 + 1) % ACAL_SIZE;
+    float t  = f - (float)i0;
+    return cogging_lut[i0] * (1.0f - t) + cogging_lut[i1] * t;
+}
+
 /* Haptic state variables */
 static float start_angle = 0.0f;
 static int step_count_buffer = 0;
 static int num_steps_old = NUM_STEPS;
 static float last_torque = 0.0f;
 static int step_count = 0;
-
+static float haptic_prev_angle = -1.0f;   /* pro výpočet inst_vel v haptic_loop */
+static float haptic_inst_vel   =  0.0f;   /* vypočítaná rychlost [rad/s], LPF α=0.2 */
 /* FOC control loop thread - triggered by k_timer at 10 kHz */
 static bldc_motor_t *g_motor_ptr = NULL;
 static K_SEM_DEFINE(haptic_sem, 0, 1);
@@ -143,6 +195,180 @@ static struct k_thread haptic_thread_data;
 
 /* Aktualni pocet kroku — meneno tlacitkem v haptic_update_num_steps_from_button() */
 static int g_num_steps = NUM_STEPS;
+
+/* ---------------------------------------------------------------------------
+ * Anti-cogging calibration
+ * Pomalu roztočí motor konstantním proudem ACAL_CAL_I po dobu ACAL_SAMPLE_MS.
+ * V každém LUT slotu naměří průměrnou rychlost a odchylku od globálního
+ * průměru přepočítá na korekční proud uložený do cogging_lut[].
+ *
+ * Vyvolej z haptic_init() PŘED startem haptic_timer (motor ještě neběží).
+ * Trvá přibližně (1 + ACAL_SAMPLE_MS/1000) sekund.
+ * --------------------------------------------------------------------------- */
+static void haptic_calibrate_anticogging(bldc_motor_t *motor)
+{
+    printk("[ACAL] Zacinam kalibraci (cca %d s)...\n",
+           1 + ACAL_SAMPLE_MS / 1000);
+    cogging_valid = false;
+    for (int i = 0; i < ACAL_SIZE; i++) cogging_lut[i] = 0.0f;
+
+    /* Statické akumulátory — vyhnutí se velkým lokálním proměnným na zásobníku */
+    static float vel_acc[ACAL_SIZE];
+    static int   vel_cnt[ACAL_SIZE];
+    for (int i = 0; i < ACAL_SIZE; i++) { vel_acc[i] = 0.0f; vel_cnt[i] = 0; }
+
+    /* --- Fáze 0: bidirectionální jog (500 ms) — uvolnění z cogging jamky ---- */
+    /* motor může být uvízlý v poloze kde +I nestačí překonat kolísání           */
+    /* → rychlé střídání směrů ho vytrže, pak FOC zvolí směr dle polohy         */
+    printk("[ACAL] Jog faze: uvolnuji rotor z cogging...\n");
+    {
+        float jog_i = motor->current_limit;  /* plný limit = max síla */
+        for (int j = 0; j < 500; j++) {
+            sensor_update(motor->sensor);
+            /* každých 50 ms otočení směru */
+            float sign = ((j / 50) % 2 == 0) ? 1.0f : -1.0f;
+            bldc_motor_move(motor, sign * jog_i);
+            bldc_motor_loop_foc(motor);
+            k_msleep(1);
+        }
+    }
+
+    /* --- Fáze 1: rozběh (2 s) — print shaft_velocity pro diagnostiku ------- */
+    sensor_update(motor->sensor);
+    float prev_angle_runup = sensor_get_angle(motor->sensor);
+    float runup_vel_sum = 0.0f;   /* pro kontrolu otáčení na konci rozběhu */
+    int   runup_vel_n   = 0;
+    for (int i = 0; i < 2000; i++) {
+        sensor_update(motor->sensor);
+        /* Vysoký proud jen prvních 500 ms (překonání koggingu), pak nižší pro lepší SNR */
+        float cal_i = (i < 500) ? ACAL_CAL_I : ACAL_CHECK_I;
+        bldc_motor_move(motor, cal_i);
+        bldc_motor_loop_foc(motor);
+
+        /* Výpočet rychlosti z rozdílu úhlů (obchází LPF uvnitř motoru) */
+        float a = sensor_get_angle(motor->sensor);
+        float da = a - prev_angle_runup;
+        while (da >  _2PI * 0.5f) da -= _2PI;
+        while (da < -_2PI * 0.5f) da += _2PI;
+        prev_angle_runup = a;
+
+        /* Akumuluj rychlost posledních 200 ms rozběhu pro kontrolu otáčení */
+        if (i >= 1800) { runup_vel_sum += da * 1000.0f; runup_vel_n++; }
+
+        if (i % 200 == 199) {
+            float inst_vel = da * 1000.0f;  /* rad/s, dt=1ms */
+            printk("[ACAL] runup %d ms: inst_vel=%.3f rad/s  shaft_vel=%.3f\n",
+                   i + 1, (double)inst_vel, (double)motor->shaft_velocity);
+        }
+        k_msleep(1);
+    }
+
+    /* Pokud se motor v posledních 200 ms rozběhu netočil, přeskočíme kalibraci hned */
+    float runup_avg_vel = (runup_vel_n > 0) ? runup_vel_sum / (float)runup_vel_n : 0.0f;
+    if (fabsf(runup_avg_vel) < 1.0f) {
+        printk("[ACAL] VAROVANI: motor se neroztocil pri rozbehu (avg_vel=%.3f) — preskakuji\n",
+               (double)runup_avg_vel);
+        bldc_motor_move(motor, 0.0f);
+        bldc_motor_loop_foc(motor);
+        return;
+    }
+
+    /* --- Fáze 2: vzorkování rychlosti (z rozdílu úhlů, ne z LPF) ---------- */
+    sensor_update(motor->sensor);
+    float prev_angle = sensor_get_angle(motor->sensor);
+    k_msleep(1);
+
+    float vel_sum = 0.0f;
+    int   vel_n   = 0;
+    int   last_pct = -1;
+
+    for (int i = 0; i < ACAL_SAMPLE_MS; i++) {
+        sensor_update(motor->sensor);
+        bldc_motor_move(motor, ACAL_CHECK_I);   /* nižší proud = lepší SNR */
+        bldc_motor_loop_foc(motor);
+
+        float angle = sensor_get_angle(motor->sensor);
+
+        /* Instantánní rychlost z enkodéru — dt = 1 ms */
+        float d_angle = angle - prev_angle;
+        while (d_angle >  _2PI * 0.5f) d_angle -= _2PI;
+        while (d_angle < -_2PI * 0.5f) d_angle += _2PI;
+        float vel = d_angle * 1000.0f;   /* [rad/s] */
+        prev_angle = angle;
+
+        if (fabsf(vel) > 0.005f) {   /* přijímáme oba směry otáčení */
+            int idx = _acal_idx(angle);
+            vel_acc[idx] += vel;
+            vel_cnt[idx]++;
+            vel_sum += vel;
+            vel_n++;
+        }
+
+        /* Průběžný výpis každých 20 % */
+        int pct = i * 100 / ACAL_SAMPLE_MS;
+        if (pct != last_pct && pct % 20 == 0) {
+            printk("[ACAL] %d %%  inst_vel=%.4f rad/s  vzorky=%d\n",
+                   pct, (double)(d_angle * 1000.0f), vel_n);
+            last_pct = pct;
+        }
+        k_msleep(1);
+    }
+
+    /* --- Fáze 3: výpočet LUT ---------------------------------------------- */
+    float avg_vel = (vel_n > 0) ? vel_sum / (float)vel_n : 0.0f;
+    printk("[ACAL] prumerna rychlost=%.3f rad/s  vzorky=%d\n",
+           (double)avg_vel, vel_n);
+
+    if (fabsf(avg_vel) < 0.001f) {
+        printk("[ACAL] VAROVANI: motor se neroztocil (vel<0.001) — preskakuji\n");
+        bldc_motor_move(motor, 0.0f);
+        bldc_motor_loop_foc(motor);
+        return;
+    }
+
+    float clamp = MOTOR_CURRENT_LIMIT * 0.25f;   /* max FF = 25 % Ilim ≈ 0.10 A */
+    int filled = 0;
+    for (int i = 0; i < ACAL_SIZE; i++) {
+        if (vel_cnt[i] > 0) {
+            float slot_vel = vel_acc[i] / (float)vel_cnt[i];
+            /* slot_vel - avg_vel: at cogging peaks motor slows relative to avg
+             * → slot_vel > avg_vel (less negative) → corr positive → CW push;
+             * this matches sign convention: positive current = CW force.         */
+            float corr = ACAL_GAIN * (slot_vel - avg_vel);
+            if (corr >  clamp) corr =  clamp;
+            if (corr < -clamp) corr = -clamp;
+            cogging_lut[i] = corr;
+            filled++;
+        }
+    }
+
+    printk("[ACAL] LUT: %d/%d slotu pokryto (%d %%)\n",
+           filled, ACAL_SIZE, filled * 100 / ACAL_SIZE);
+
+    if (filled >= ACAL_SIZE * 3 / 4) {
+        /* Post-processing: klouzavý průměr šířky ACAL_SMOOTH_TAP.
+         * GM3506 (11pp) má ~23 slotů/hump; 27-tap filtr potlačí slot-to-slot
+         * šum a zachová prostorový signál coggingu. */
+        static float lut_tmp[ACAL_SIZE];
+        for (int i = 0; i < ACAL_SIZE; i++) {
+            float sum = 0.0f;
+            int half = ACAL_SMOOTH_TAP / 2;
+            for (int k = -half; k <= half; k++) {
+                sum += cogging_lut[(i + k + ACAL_SIZE) % ACAL_SIZE];
+            }
+            lut_tmp[i] = sum / (float)ACAL_SMOOTH_TAP;
+        }
+        for (int i = 0; i < ACAL_SIZE; i++) cogging_lut[i] = lut_tmp[i];
+
+        cogging_valid = true;
+        printk("[ACAL] Anti-cogging AKTIVNI (LUT vyhlazen %d-tap)\n", ACAL_SMOOTH_TAP);
+    } else {
+        printk("[ACAL] Nedostatecne pokryti — anti-cogging VYPNUT\n");
+    }
+
+    bldc_motor_move(motor, 0.0f);
+    bldc_motor_loop_foc(motor);
+}
 
 static void haptic_timer_cb(struct k_timer *timer)
 {
@@ -375,6 +601,10 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     step_count_buffer = 0;
     num_steps_old = NUM_STEPS;
 
+    /* --- Step 8: Anti-cogging calibration ------------------------------- */
+    printk("8. Kalibruji anti-cogging LUT...\n");
+    haptic_calibrate_anticogging(motor);
+
     printk("Starting haptic control loop...\n");
 
     /* Start 1 kHz FOC control loop */
@@ -405,6 +635,15 @@ void haptic_loop(bldc_motor_t *motor)
         sensor_update(motor->sensor);
         float current_angle = sensor_get_angle(motor->sensor);
 
+        /* Počítej inst_vel přímo z enkodéru (motor->shaft_velocity je vždy 0
+         * kvůli LPF při tomto rozvrhu volání). LPF α=0.2 potlačí 1ms šum. */
+        if (haptic_prev_angle < 0.0f) haptic_prev_angle = current_angle;
+        float d_ang = current_angle - haptic_prev_angle;
+        while (d_ang >  _2PI * 0.5f) d_ang -= _2PI;
+        while (d_ang < -_2PI * 0.5f) d_ang += _2PI;
+        haptic_prev_angle = current_angle;
+        haptic_inst_vel = 0.2f * (d_ang * 1000.0f) + 0.8f * haptic_inst_vel;
+
         /* Calculate relative angle */
         float angle_rel = current_angle - start_angle;
 
@@ -430,28 +669,30 @@ void haptic_loop(bldc_motor_t *motor)
                                          PHASE_ON, PHASE_ON, PHASE_ON);
 
         if (num_steps == 0) {
-            /* ---- Smooth mode: velocity damping, zero detents ------------- */
-            float vel = motor->shaft_velocity;
-            float abs_vel = (vel < 0.0f) ? -vel : vel;
-            float target_current;
+            /* ---- Smooth mode: torque-based pipeline (stejný jako detent mode) --
+             * target_torque [N·m] = SMOOTH_KD × vel  (tlumičí moment)
+             * target_current = target_torque / MOTOR_KT + ff + i_bemf               */
+            float vel = haptic_inst_vel;
+            float scale_factor = 0.33f;  /* pro snížení citlivosti a lepší stabilitu */
+            float ff = anticogging_ff(current_angle);
+            float ke_rad = 1.0f / (320.0f * 0.10472f);     /* 0.02984 V·s/rad_mech  */
+            float i_bemf = ke_rad * haptic_inst_vel / 5.6f; /* A ≈ 0.0053 × vel       */
 
-            if (abs_vel < 0.3f) {
-                /* dead-zone: pod tuto rychlost neposílej proud (nuluje drhnuti) */
-                target_current = 0.0f;
-            } else {
-                /* tlumení: proud przeciw pohybu = odpor bez dorazu */
-                target_current = -SMOOTH_KD * vel;
-                if (target_current >  motor->current_limit) target_current =  motor->current_limit;
-                if (target_current < -motor->current_limit) target_current = -motor->current_limit;
-            }
+            target_torque  = SMOOTH_KD * vel * scale_factor;              /* N·m, tlumičí moment     */
+            last_torque    = target_torque;
+
+            float target_current = target_torque / MOTOR_KT + ff + i_bemf;
+            if (target_current >  motor->current_limit) target_current =  motor->current_limit;
+            if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
             last_torque = 0.0f;
             bldc_motor_move(motor, target_current);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  Iq_meas=%.3f A\n",
-                       (double)vel, (double)target_current, (double)motor->current.q);
+                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  ff=%.4f  bemf_comp=%.4f  valid=%d\n",
+                       (double)haptic_inst_vel, (double)target_current,
+                       (double)ff, (double)i_bemf, (int)cogging_valid);
             }
 
         } else {
@@ -461,9 +702,10 @@ void haptic_loop(bldc_motor_t *motor)
             step_count = (int)roundf(step_count_f) + step_count_buffer;
             int step_count_abs = (int)step_count_f;
             float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2.0f;
+            float scale_factor = 0.75f;  /* pro snížení citlivosti a lepší stabilitu */
 
             float norm_pos = between_steps_pos / step_size;
-            target_torque = -HAPTIC_TORQUE_LIMIT * sinf(_2PI * norm_pos);
+            target_torque = -HAPTIC_TORQUE_LIMIT * sinf(_2PI * norm_pos) * scale_factor;
 
             float dist = (norm_pos - 0.5f < 0.0f) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
             if (dist < 0.05f) {
@@ -478,6 +720,8 @@ void haptic_loop(bldc_motor_t *motor)
             last_torque = target_torque;
 
             float target_current = target_torque / MOTOR_KT;
+            /* Velocity damping: same sign convention as smooth mode (+Kd*vel brakes). */
+            target_current += DETENT_KD * haptic_inst_vel;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
