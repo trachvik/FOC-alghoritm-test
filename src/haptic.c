@@ -49,6 +49,9 @@ extern float sensor_get_angle(sensor_t *sensor);
 /* S mid-rail biasem: meritelny rozsah ±0.458 A, haptic detent pouziva max ~0.32 A */
 #define HAPTIC_TORQUE_LIMIT  0.025f  /* N·m — i_q ≈ 0.32 A, v rozahu ±0.458 A */
 #define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
+/* Smooth mode: dampovaci koeficient [A·s/rad].  Odpor = Kd × rychlost.
+ * Kd=0.004 → pri 5 rad/s (cca 48 rpm) = 0.02 A → jemny tlumeny pohyb. */
+#define SMOOTH_KD            0.004f
 
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
@@ -133,10 +136,13 @@ static bldc_motor_t *g_motor_ptr = NULL;
 static K_SEM_DEFINE(haptic_sem, 0, 1);
 static struct k_timer haptic_timer;
 
-#define HAPTIC_THREAD_STACK_SIZE 2048
+#define HAPTIC_THREAD_STACK_SIZE 4096
 #define HAPTIC_THREAD_PRIORITY 0 /* Highest preemptible priority */
 static K_THREAD_STACK_DEFINE(haptic_stack, HAPTIC_THREAD_STACK_SIZE);
 static struct k_thread haptic_thread_data;
+
+/* Aktualni pocet kroku — meneno tlacitkem v haptic_update_num_steps_from_button() */
+static int g_num_steps = NUM_STEPS;
 
 static void haptic_timer_cb(struct k_timer *timer)
 {
@@ -154,14 +160,6 @@ static void haptic_thread_fn(void *p1, void *p2, void *p3)
     {
         k_sem_take(&haptic_sem, K_FOREVER);
         haptic_loop(g_motor_ptr);
-        // Debug: vypiš stav tlačítka každých 200 ms
-        static int64_t last_debug = 0;
-        int64_t now_debug = k_uptime_get();
-        if (now_debug - last_debug > 200)
-        {
-            printk("Button PB8 state: %d\n", gpio_pin_get_dt(&user_button));
-            last_debug = now_debug;
-        }
     }
 }
 
@@ -169,49 +167,46 @@ int haptic_update_num_steps_from_button(void)
 {
     static bool initialized = false;
     static bool last_pressed = false;
-    static int current_num_steps = NUM_STEPS;
     static int64_t last_change_ms = 0;
 
-    if (!initialized)
-    {
-        if (user_button.port != NULL && gpio_is_ready_dt(&user_button))
-        {
-            gpio_pin_configure_dt(&user_button, GPIO_INPUT | GPIO_PULL_UP);
-            int init_state = gpio_pin_get_dt(&user_button);
-            last_pressed = (init_state > 0);
-            last_change_ms = k_uptime_get();
-        }
+    if (!initialized) {
+        /* Nakonfiguruj PA3 jako vstup s pull-up primo pres registry
+         * (obchazi Zephyr GPIO abstrakci, ktera muze byt konfliktni) */
+        RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;  /* hodiny pro GPIOA */
+        /* PA3: MODER[7:6]=00 (vstup), PUPDR[7:6]=01 (pull-up) */
+        GPIOA->MODER  &= ~(3U << 6);   /* input mode */
+        GPIOA->PUPDR  &= ~(3U << 6);
+        GPIOA->PUPDR  |=  (1U << 6);   /* pull-up */
+        last_change_ms = k_uptime_get();
+        uint32_t pa3 = (GPIOA->IDR >> 3) & 1U;
+        last_pressed = (pa3 == 0);  /* 0V = stisknuto */
+        printk("[BTN] init: phys_PA3=%u last_pressed=%d\n",
+               (unsigned)pa3, (int)last_pressed);
         initialized = true;
     }
 
-    if (user_button.port == NULL || !gpio_is_ready_dt(&user_button))
-    {
-        return current_num_steps;
-    }
-
-    // Správná detekce stisku pro aktivní LOW tlačítko
-    bool pressed = gpio_pin_get_dt(&user_button) == 0;
+    /* Cteni primo z IDR — 0V na PA3 = stisknuto */
+    bool pressed = (((GPIOA->IDR >> 3) & 1U) == 0);
     int64_t now_ms = k_uptime_get();
 
-    if (pressed && !last_pressed && (now_ms - last_change_ms) > 180)
-    {
-        if (current_num_steps == 0)
-        {
-            current_num_steps = 20;
-        }
-        else if (current_num_steps <= 8)
-        {
-            current_num_steps = 0;
-        }
-        else
-        {
-            current_num_steps -= 4;
+    /* Rising edge s debounce 180 ms */
+    if (pressed && !last_pressed && (now_ms - last_change_ms) > 180) {
+        if (g_num_steps == 0) {
+            g_num_steps = 20;
+        } else if (g_num_steps <= 8) {
+            g_num_steps = 0;
+        } else {
+            g_num_steps -= 4;
         }
         last_change_ms = now_ms;
+        printk("[BTN] PRESS -> num_steps=%d\n", g_num_steps);
+    }
+    if (!pressed && last_pressed) {
+        last_change_ms = now_ms;  /* reset debounce na release taky */
     }
 
     last_pressed = pressed;
-    return current_num_steps;
+    return g_num_steps;
 }
 
 /* Pomocna funkce: blikne LED N-krat (bezpecne i z kontextu haptic_init) */
@@ -410,7 +405,7 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
                     haptic_thread_fn, NULL, NULL, NULL,
                     HAPTIC_THREAD_PRIORITY, 0, K_NO_WAIT);
     k_thread_name_set(&haptic_thread_data, "haptic_foc");
-    k_timer_start(&haptic_timer, K_USEC(100), K_USEC(100));
+    k_timer_start(&haptic_timer, K_MSEC(1), K_MSEC(1));
 
     return 0;
 }
@@ -424,8 +419,7 @@ void haptic_loop(bldc_motor_t *motor)
         float target_torque;
         float torque_filter_alpha = 0.8f;
 
-        //int num_steps = haptic_update_num_steps_from_button();
-        int num_steps = NUM_STEPS;
+        int num_steps = haptic_update_num_steps_from_button();
 
         /* Read encoder via sensor abstraction linked in motor struct */
         sensor_update(motor->sensor);
@@ -446,52 +440,53 @@ void haptic_loop(bldc_motor_t *motor)
         while (angle_rel > _2PI) angle_rel -= _2PI;
         while (angle_rel < 0) angle_rel += _2PI;
 
-        /* Calculate step position */
-        float step_size = (num_steps > 0) ? (_2PI / (float)num_steps) : _2PI;
-        float step_count_f = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0.0f;
-        step_count = (int)roundf(step_count_f) + step_count_buffer;
-        int step_count_abs = (num_steps > 0) ? ((float)num_steps / _2PI) * angle_rel : 0;
-        float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2;
+        /* Debug print every 500 ms */
+        static int64_t last_print = 0;
+        int64_t now_print = k_uptime_get();
+        bool do_print = (now_print - last_print > 500);
+        if (do_print) last_print = now_print;
 
-        /* Debug print */
-        /*if (now - last_print > 500) {
-            printk("Angle: %.1f°, Vel: %.2f rad/s\n",
-                   angle_rel * 180.0f / 3.14159f, motor->shaft_velocity);
-            last_print = now;
-        }*/
+        bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
+                                         PHASE_ON, PHASE_ON, PHASE_ON);
 
-    //     /* Smooth mode */
-    //     if (num_steps == 0) {
-    //         /*float damping = 0.5f;
-    //         target_voltage = -damping * motor->shaft_velocity;
+        if (num_steps == 0) {
+            /* ---- Smooth mode: velocity damping, zero detents ------------- */
+            float vel = motor->shaft_velocity;
+            float abs_vel = (vel < 0.0f) ? -vel : vel;
+            float target_current;
 
-    //         float abs_vel = (motor->shaft_velocity < 0) ? -motor->shaft_velocity : motor->shaft_velocity;
-    //         if (abs_vel < 0.1f) {
-    //             target_voltage = 0.0f;
-    //         } else if (abs_vel < 3.0f) {
-    //             float scale = (abs_vel - 0.1f) / 2.9f;
-    //             target_voltage *= scale;
-    //         }
+            if (abs_vel < 0.3f) {
+                /* dead-zone: pod tuto rychlost neposílej proud (nuluje drhnuti) */
+                target_current = 0.0f;
+            } else {
+                /* tlumení: proud przeciw pohybu = odpor bez dorazu */
+                target_current = -SMOOTH_KD * vel;
+                if (target_current >  motor->current_limit) target_current =  motor->current_limit;
+                if (target_current < -motor->current_limit) target_current = -motor->current_limit;
+            }
 
-    //         target_voltage = 0.08f * target_voltage + 0.92f * last_voltage;*/
-    //         // passive braking: short all three phases to low side
-    //         bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-    //                                          PHASE_LO, PHASE_LO, PHASE_LO);
-    //         bldc_driver_6pwm_set_pwm((bldc_driver_6pwm_t *)motor->driver, 0.0f, 0.0f, 0.0f);
-    //         last_voltage = 0.0f;
+            last_torque = 0.0f;   /* reset pro plynuly prechod do detent modu */
+            bldc_motor_move(motor, target_current);
+            bldc_motor_loop_foc(motor);
 
-    //     }
-    //     /* Detent mode */
-    //     else {
-            bldc_driver_6pwm_set_phase_state((bldc_driver_6pwm_t *)motor->driver,
-                                             PHASE_ON, PHASE_ON, PHASE_ON);
+            if (do_print) {
+                printk("[SMOOTH] vel=%.2f rad/s  Iq_sp=%.3f A  PA3=%u\n",
+                       (double)vel, (double)target_current,
+                       (unsigned)((GPIOA->IDR >> 3) & 1U));
+            }
 
-            /* Haptic detent: sinusový profil točivého momentu [N·m] → i_q = T / Kt */
+        } else {
+            /* ---- Detent mode: sinusový haptic profil -------------------- */
+            float step_size   = _2PI / (float)num_steps;
+            float step_count_f = ((float)num_steps / _2PI) * angle_rel;
+            step_count = (int)roundf(step_count_f) + step_count_buffer;
+            int step_count_abs = (int)step_count_f;
+            float between_steps_pos = angle_rel - step_count_abs * step_size + step_size / 2.0f;
+
             float norm_pos = between_steps_pos / step_size;
             target_torque = -HAPTIC_TORQUE_LIMIT * sinf(_2PI * norm_pos);
 
-            float dist = (norm_pos - 0.5f < 0) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
-
+            float dist = (norm_pos - 0.5f < 0.0f) ? -(norm_pos - 0.5f) : (norm_pos - 0.5f);
             if (dist < 0.05f) {
                 target_torque = 0.0f;
             } else if (dist < 0.15f) {
@@ -499,30 +494,21 @@ void haptic_loop(bldc_motor_t *motor)
                 target_torque *= scale;
             }
 
-            float scaling_factor = 0.3f;
-            target_torque = torque_filter_alpha * target_torque + (1.0f - torque_filter_alpha) * last_torque * scaling_factor;
-
+            target_torque = torque_filter_alpha * target_torque
+                          + (1.0f - torque_filter_alpha) * last_torque * 0.3f;
             last_torque = target_torque;
 
-            /* Prevod: tocivý moment → q-osa proud  i_q = T / Kt [A] */
             float target_current = target_torque / MOTOR_KT;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            /* low_side_cs_get_phase_currents() is called inside bldc_motor_loop_foc()
-             * via motor->current_sense — no manual current_a/b assignment needed. */
-            bldc_motor_move(motor, target_current);  /* set current_sp / voltage_sp */
-            bldc_motor_loop_foc(motor);              /* execute FOC (reads currents internally) */
+            bldc_motor_move(motor, target_current);
+            bldc_motor_loop_foc(motor);
 
-            /* Debug: print live current readings every 500 ms */
-            static int64_t last_adc_dbg = 0;
-            int64_t now_adc = k_uptime_get();
-            if (now_adc - last_adc_dbg > 500) {
-                printk("[CS] T=%.4f Nm  Iq_sp=%.3f A  Ia=%.4f A  Ib=%.4f A  Iq=%.4f A\n",
-                       (double)target_torque, (double)target_current,
-                       (double)motor->current_a, (double)motor->current_b,
-                       (double)motor->current.q);
-                last_adc_dbg = now_adc;
+            if (do_print) {
+                printk("[DETENT] steps=%d  Iq=%.3f A  PA3=%u\n",
+                       num_steps, (double)target_current,
+                       (unsigned)((GPIOA->IDR >> 3) & 1U));
             }
-    //    }
+        }
 }

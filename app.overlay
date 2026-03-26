@@ -12,6 +12,21 @@
 		};
 	};
 
+	/*
+	 * Tlacitko KEY na BlackPill je na PA0 — stejny pin jako ADC1_IN0 (proud Ic).
+	 * STM32F4 v analog modu vraci IDR=0 vzdy → GPIO read nefunguje.
+	 * Presun sw0 na PA3 (volny pin, neni pouzit ADC, SPI, PWM).
+	 * Pripoj fyzicke tlacitko: PA3 → GND (PULL_UP zajisti klidovy stav = 1).
+	 */
+	gpio_keys {
+		compatible = "gpio-keys";
+		user_button: button {
+			label = "KEY";
+			gpios = <&gpioa 3 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+			zephyr,code = <11>;
+		};
+	};
+
 	aliases {
 		led0 = &blue_led;
 		sw0 = &user_button;
