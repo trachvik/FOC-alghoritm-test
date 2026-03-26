@@ -51,8 +51,9 @@ extern float sensor_get_angle(sensor_t *sensor);
 #define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
 /* Smooth mode: dampovaci koeficient [A·s/rad].
  * Kd=0.025 → pri 1 rad/s = 0.025 A = 1.9 mN·m → citelny odpor pri pomalom pohybe. */
-#define SMOOTH_KD            0.002f  /* N·m/(rad/s) — tlumicí moment; 0.002/0.0778≈0.026 A/(rad/s)
-                                        * srovnatelne s HAPTIC_TORQUE_LIMIT=0.025 N·m */
+#define SMOOTH_COULOMB_I     0.060f  /* [A] konstantní brzdící proud: T = 0.060×0.0778 = 0.0047 N·m
+                                        * stejný pro všechny rychlosti — Coulombovo tření     */
+#define SMOOTH_VEL_DZONE     0.4f    /* [rad/s] mrtvá zóna — pod touto rychlostí žádné brzdění */
 /* Detent mode: dampovaci koeficient.  Potlacuje oscilacie na hranicich kroku.
  * Kd=0.008 → pri 5 rad/s = 0.04 A protisila; pri stani ≈0 A (bez vplyvu). */
 #define DETENT_KD            0.008f
@@ -669,29 +670,38 @@ void haptic_loop(bldc_motor_t *motor)
                                          PHASE_ON, PHASE_ON, PHASE_ON);
 
         if (num_steps == 0) {
-            /* ---- Smooth mode: torque-based pipeline (stejný jako detent mode) --
-             * target_torque [N·m] = SMOOTH_KD × vel  (tlumičí moment)
-             * target_current = target_torque / MOTOR_KT + ff + i_bemf               */
-            float vel = haptic_inst_vel;
-            float scale_factor = 0.33f;  /* pro snížení citlivosti a lepší stabilitu */
-            float ff = anticogging_ff(current_angle);
-            float ke_rad = 1.0f / (320.0f * 0.10472f);     /* 0.02984 V·s/rad_mech  */
-            float i_bemf = ke_rad * haptic_inst_vel / 5.6f; /* A ≈ 0.0053 × vel       */
+            /* ---- Smooth mode: Coulombovo brzdění s konstantním momentem --------
+             * Brzdící proud SMOOTH_COULOMB_I je konstantní (nezávislý na rychlosti):
+             *   T_brake = SMOOTH_COULOMB_I × MOTOR_KT = 0.060 × 0.0778 = 0.0047 N·m
+             * i_bemf feedforward zajistí že skutečný proud zůstane na SMOOTH_COULOMB_I
+             * i při vyšších otáčkách (zprostění zpětného napětí).
+             * Žádné přepínání módů → žádný křídový pocit.                          */
 
-            target_torque  = SMOOTH_KD * vel * scale_factor;              /* N·m, tlumičí moment     */
-            last_torque    = target_torque;
+            float ff     = anticogging_ff(current_angle);
+            float ke_rad = 1.0f / (320.0f * 0.10472f);        /* 0.02984 V·s/rad_mech  */
+            float i_bemf = ke_rad * haptic_inst_vel / 5.6f;   /* kompenzace back-EMF    */
 
-            float target_current = target_torque / MOTOR_KT + ff + i_bemf;
-            if (target_current >  motor->current_limit) target_current =  motor->current_limit;
-            if (target_current < -motor->current_limit) target_current = -motor->current_limit;
+            float I_active;
+            if (fabsf(haptic_inst_vel) > SMOOTH_VEL_DZONE) {
+                /* Coulomb: konstantní proud brzdí pohyb (sign(vel) × I_coulomb) */
+                float dir = (haptic_inst_vel >= 0.0f) ? 1.0f : -1.0f;
+                I_active = dir * SMOOTH_COULOMB_I + i_bemf + ff;
+            } else {
+                /* Mrtvá zóna: jen anti-cogging, bez brzdění (prevence oscilací) */
+                I_active = ff;
+            }
+            if (I_active >  motor->current_limit) I_active =  motor->current_limit;
+            if (I_active < -motor->current_limit) I_active = -motor->current_limit;
 
-            last_torque = 0.0f;
-            bldc_motor_move(motor, target_current);
+            target_torque = I_active * MOTOR_KT;
+            last_torque   = target_torque;
+
+            bldc_motor_move(motor, I_active);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  ff=%.4f  bemf_comp=%.4f  valid=%d\n",
-                       (double)haptic_inst_vel, (double)target_current,
+                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  ff=%.4f  bemf=%.4f  valid=%d\n",
+                       (double)haptic_inst_vel, (double)I_active,
                        (double)ff, (double)i_bemf, (int)cogging_valid);
             }
 
@@ -720,11 +730,12 @@ void haptic_loop(bldc_motor_t *motor)
             last_torque = target_torque;
 
             float target_current = target_torque / MOTOR_KT;
-            /* Velocity damping: same sign convention as smooth mode (+Kd*vel brakes). */
+            /* Velocity damping */
             target_current += DETENT_KD * haptic_inst_vel;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
+            /* Pasivní brake odstraňován: způsoboval "křídový" pocit při přechodu. */
             bldc_motor_move(motor, target_current);
             bldc_motor_loop_foc(motor);
 
