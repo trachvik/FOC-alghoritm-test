@@ -51,9 +51,10 @@ extern float sensor_get_angle(sensor_t *sensor);
 #define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
 /* Smooth mode: dampovaci koeficient [A·s/rad].
  * Kd=0.025 → pri 1 rad/s = 0.025 A = 1.9 mN·m → citelny odpor pri pomalom pohybe. */
-#define SMOOTH_COULOMB_I     0.060f  /* [A] konstantní brzdící proud: T = 0.060×0.0778 = 0.0047 N·m
-                                        * stejný pro všechny rychlosti — Coulombovo tření     */
-#define SMOOTH_VEL_DZONE     0.4f    /* [rad/s] mrtvá zóna — pod touto rychlostí žádné brzdění */
+#define SMOOTH_COULOMB_I     0.060f  /* [A] Coulombův brzdící proud: T = 0.060×0.0778 = 4.7 mN·m */
+#define SMOOTH_VEL_SOFTSCALE 2.0f    /* [rad/s] měkký přechod signálu: tanh(vel/scale)
+                                        * při 2 rad/s = 76 % I_coulomb, při 4 rad/s = 96 %
+                                        * eliminuje skokovou změnu směru proudu → žádné loupání */
 /* Detent mode: dampovaci koeficient.  Potlacuje oscilacie na hranicich kroku.
  * Kd=0.008 → pri 5 rad/s = 0.04 A protisila; pri stani ≈0 A (bez vplyvu). */
 #define DETENT_KD            0.008f
@@ -670,26 +671,24 @@ void haptic_loop(bldc_motor_t *motor)
                                          PHASE_ON, PHASE_ON, PHASE_ON);
 
         if (num_steps == 0) {
-            /* ---- Smooth mode: Coulombovo brzdění s konstantním momentem --------
-             * Brzdící proud SMOOTH_COULOMB_I je konstantní (nezávislý na rychlosti):
-             *   T_brake = SMOOTH_COULOMB_I × MOTOR_KT = 0.060 × 0.0778 = 0.0047 N·m
-             * i_bemf feedforward zajistí že skutečný proud zůstane na SMOOTH_COULOMB_I
-             * i při vyšších otáčkách (zprostění zpětného napětí).
-             * Žádné přepínání módů → žádný křídový pocit.                          */
+            /* ---- Smooth mode: Coulombovo brzdění s měkkým přechodem -----------------
+             * Moment brzdění: T = SMOOTH_COULOMB_I × tanh(vel / SMOOTH_VEL_SOFTSCALE) × Kt
+             * tanh dává spojitý přechod přes nulu (výsledek ≈ 0 při malych vel)
+             * → eliminuje skokovou změnu směru proudu a loupání.
+             * i_bemf zajistí konstantní skutečný proud i při vyšších otáčkách. */
 
             float ff     = anticogging_ff(current_angle);
-            float ke_rad = 1.0f / (320.0f * 0.10472f);        /* 0.02984 V·s/rad_mech  */
-            float i_bemf = ke_rad * haptic_inst_vel / 5.6f;   /* kompenzace back-EMF    */
+            float ke_rad = 1.0f / (320.0f * 0.10472f);
+            float i_bemf = ke_rad * haptic_inst_vel / 5.6f;
 
-            float I_active;
-            if (fabsf(haptic_inst_vel) > SMOOTH_VEL_DZONE) {
-                /* Coulomb: konstantní proud brzdí pohyb (sign(vel) × I_coulomb) */
-                float dir = (haptic_inst_vel >= 0.0f) ? 1.0f : -1.0f;
-                I_active = dir * SMOOTH_COULOMB_I + i_bemf + ff;
-            } else {
-                /* Mrtvá zóna: jen anti-cogging, bez brzdění (prevence oscilací) */
-                I_active = ff;
-            }
+            /* Clamp ff: LUT errors cannot exceed half of Coulomb current */
+            float ff_lim = SMOOTH_COULOMB_I * 0.5f;
+            float ff_c   = (ff >  ff_lim) ?  ff_lim : (ff < -ff_lim) ? -ff_lim : ff;
+
+            /* Měkké znaménko: plynulý přechod -1 ↔ +1 bez skoku */
+            float soft_dir = tanhf(haptic_inst_vel / SMOOTH_VEL_SOFTSCALE);
+            float I_active = soft_dir * SMOOTH_COULOMB_I + i_bemf + ff_c;
+
             if (I_active >  motor->current_limit) I_active =  motor->current_limit;
             if (I_active < -motor->current_limit) I_active = -motor->current_limit;
 
