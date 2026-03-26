@@ -146,34 +146,16 @@ static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
     if (offset_counts == 0U) offset_counts = 1U;
     if (offset_counts > tim1_arr / 4U) offset_counts = tim1_arr / 4U;
 
-    printk("[TIM1] CEN=%u ARR=%u, target CCR4=%u (offset %u ns)\n",
-           (unsigned)!!(TIM1->CR1 & TIM_CR1_CEN),
-           (unsigned)tim1_arr, (unsigned)offset_counts,
-           (unsigned)offset_trough_ns);
-    k_msleep(30);
-
-    /* CH4: output compare, PWM mode 1, no preload, CC4 GPIO output disabled.
-     * OC4REF = 1 while CNT < CCR4 → rising edge at CNT==0 (period start). */
-    printk("[TIM1] CCMR2...\n"); k_msleep(30);
     TIM1->CCMR2 = (TIM1->CCMR2
                    & ~(TIM_CCMR2_CC4S_Msk | TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE))
                 | (0b110U << TIM_CCMR2_OC4M_Pos);   /* PWM mode 1 */
-
-    printk("[TIM1] CCER...\n"); k_msleep(30);
     TIM1->CCER &= ~TIM_CCER_CC4E;   /* no GPIO output */
-
-    printk("[TIM1] CCR4=%u...\n", (unsigned)offset_counts); k_msleep(30);
     TIM1->CCR4 = offset_counts;
-
-    /* Route OC4REF → TRGO so ADC injected trigger (JEXTSEL=TIM1_TRGO) fires
-     * once per PWM period at the current-sense sampling point.             */
-    printk("[TIM1] CR2 MMS=OC4REF...\n"); k_msleep(30);
     TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
               | (0b111U << TIM_CR2_MMS_Pos);   /* MMS=111 → OC4REF → TRGO */
 
-    printk("[CS-HW] TIM1 CH4/TRGO OK: ARR=%u CCR4=%u offset_ns=%u\n",
-           (unsigned)TIM1->ARR, (unsigned)TIM1->CCR4,
-           (unsigned)offset_trough_ns);
+    printk("[CS] TIM1 ARR=%u CCR4=%u (%u ns from period start)\n",
+           (unsigned)TIM1->ARR, (unsigned)TIM1->CCR4, (unsigned)offset_trough_ns);
 }
 
 /* ---------------------------------------------------------------------------
@@ -187,46 +169,13 @@ static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
  * ------------------------------------------------------------------------- */
 static void _configure_adc_injected(void)
 {
-    printk("[ADC] checking device ready...\n"); k_msleep(30);
-    /* Pin-mux via Zephyr (must be done before touching registers) */
     if (!device_is_ready(adc_dev)) {
-        printk("[CS-HW] ADC device not ready!\n");
+        printk("[CS] ERROR: ADC device not ready!\n");
         return;
     }
-    printk("[ADC] ch0 setup...\n"); k_msleep(30);
     adc_channel_setup(adc_dev, &ch0_cfg);
-    printk("[ADC] ch1 setup...\n"); k_msleep(30);
     adc_channel_setup(adc_dev, &ch1_cfg);
-
-    /*
-     * Do NOT power-cycle the ADC (ADON=0 then ADON=1).
-     * Zephyr's STM32 ADC driver may use DMA; turning ADON off while DMA is
-     * active generates a DMA error interrupt → hard fault.
-     * On STM32F4, injected sequence registers (JSQR, CR2.JEXTSEL/JEXTEN) can
-     * be written safely while ADON=1 as long as no injected conversion is
-     * currently in progress (which is guaranteed here — we haven't triggered
-     * any).
-     *
-     * JEOCIE is intentionally left disabled: _read_adc_raw() polls SR.JEOC,
-     * so no interrupt is needed.  Enabling JEOCIE without a Zephyr-registered
-     * ISR entry would cause an unhandled-interrupt fault the first time the
-     * injected group completes.
-     */
-
-    printk("[ADC] writing JSQR...\n"); k_msleep(30);
-    /* Injected sequence: 2 conversions
-     *   JL = 1 (value 1 → 2 conversions)
-     *   JSQ3 = CH0 (PA0, phase W / Ic)  → result in JDR1
-     *   JSQ4 = CH1 (PA1, phase UV / Ia) → result in JDR2             */
-    ADC1->JSQR = ((2U - 1U) << ADC_JSQR_JL_Pos)
-               | (0U        << ADC_JSQR_JSQ3_Pos)
-               | (1U        << ADC_JSQR_JSQ4_Pos);
-
-    printk("[ADC] setting up channels via Zephyr API...\n"); k_msleep(30);
-    /* Only need Zephyr channel setup for pin-mux (MODER=analog, SMPR, SQR).
-     * All further reads use adc_read() so we do NOT touch CR2/JSQR manually.
-     * Zephyr's STM32 ADC driver owns CR2; raw JSWSTART writes conflict. */
-    printk("[CS-HW] ADC1 using Zephyr adc_read() — no raw CR2/JSQR writes\n");
+    printk("[CS] ADC ready (CH0=PA0/Ic, CH1=PA1/Ia, Zephyr adc_read)\n");
 }
 
 /* ---------------------------------------------------------------------------
