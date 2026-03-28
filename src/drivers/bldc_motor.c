@@ -528,9 +528,9 @@ int bldc_motor_init_foc(bldc_motor_t *motor)
         for (int i = 0; i < 100; i++) {
             float voltage_ramp = voltage_align * i / 100.0f;
             bldc_motor_set_phase_voltage(motor, voltage_ramp, 0.0f, _3PI_2);
-            k_msleep(5);
+            k_msleep(2);
         }
-        k_msleep(300);
+        k_msleep(100);
         
         /* Move one electrical revolution forward - smoother with more steps */
         for (int i = 0; i <= 1000; i++) {
@@ -562,7 +562,7 @@ int bldc_motor_init_foc(bldc_motor_t *motor)
         sensor_update(motor->sensor);
         float end_angle = sensor_get_angle(motor->sensor);
         bldc_motor_set_phase_voltage(motor, 0.0f, 0.0f, 0.0f);
-        k_msleep(200);
+        k_msleep(50);
         
         /* Determine direction from movement */
         float moved = fabsf(mid_angle - end_angle);
@@ -584,9 +584,9 @@ int bldc_motor_init_foc(bldc_motor_t *motor)
         for (int i = 0; i < 100; i++) {
             float voltage_ramp = voltage_align * i / 100.0f;
             bldc_motor_set_phase_voltage(motor, voltage_ramp, 0.0f, _3PI_2);
-            k_msleep(3);
+            k_msleep(2);
         }
-        k_msleep(500);
+        k_msleep(200);
         
         /* Read sensor and get zero electric angle */
         sensor_update(motor->sensor);
@@ -604,7 +604,7 @@ int bldc_motor_init_foc(bldc_motor_t *motor)
         
         /* Stop motor */
         bldc_motor_set_phase_voltage(motor, 0.0f, 0.0f, 0.0f);
-        k_msleep(200);
+        k_msleep(50);
     }
     
     motor->motor_status = MOTOR_READY;

@@ -141,31 +141,57 @@ static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
 
     /* Read actual ARR — do NOT change it */
     uint32_t tim1_arr = TIM1->ARR;
-    uint32_t offset_counts = (uint32_t)(
-        ((uint64_t)offset_trough_ns * TIM1_CLOCK_HZ) / 1000000000ULL);
-    if (offset_counts == 0U) offset_counts = 1U;
-    if (offset_counts > tim1_arr / 4U) offset_counts = tim1_arr / 4U;
+
+    /*
+     * Place CCR4 at 75% of the PWM period.
+     *
+     * In edge-aligned UP-counting PWM mode 1:
+     *   OC4REF = HIGH while CNT < CCR4   → OC4REF = LOW from CNT = CCR4 to ARR
+     * Falling edge of OC4REF at CNT = CCR4 → TRGO → ADC injected trigger.
+     *
+     * Safe-window requirement: CCR4 > CCR_max + dead_time_counts
+     *   At I_limit=0.4A, Vq ≈ 5.6×0.4 = 2.24V, duty ≈ 44% → CCR_max ≈ 0.44×ARR
+     *   dead_time ≈ 50 counts → safe window starts at ~0.44×ARR + 50 ≈ 45%
+     *   CCR4 = 75% → 30% settling margin before trigger (>>enough).
+     *
+     * ADC completion margin: (ARR - CCR4) / f_CLK > t_ADC_conv (~2.5 µs)
+     *   With CCR4 = 75%×ARR: remaining = 25%×ARR = ~10 µs >> 2.5 µs ✓
+     *
+     * JEXTEN = 0b10 (falling edge) in _configure_adc_injected().
+     */
+    uint32_t ccr4 = (tim1_arr >= 8U) ? (tim1_arr * 3U / 4U) : (tim1_arr / 2U);
 
     TIM1->CCMR2 = (TIM1->CCMR2
                    & ~(TIM_CCMR2_CC4S_Msk | TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE))
                 | (0b110U << TIM_CCMR2_OC4M_Pos);   /* PWM mode 1 */
-    TIM1->CCER &= ~TIM_CCER_CC4E;   /* no GPIO output */
-    TIM1->CCR4 = offset_counts;
+    TIM1->CCER &= ~(TIM_CCER_CC4E | TIM_CCER_CC4P | TIM_CCER_CC4NP);  /* no GPIO, active-high */
+    TIM1->CCR4 = ccr4;
     TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
               | (0b111U << TIM_CR2_MMS_Pos);   /* MMS=111 → OC4REF → TRGO */
 
-    printk("[CS] TIM1 ARR=%u CCR4=%u (%u ns from period start)\n",
-           (unsigned)TIM1->ARR, (unsigned)TIM1->CCR4, (unsigned)offset_trough_ns);
+    printk("[CS] TIM1 ARR=%u CCR4=%u (trigger @ ~%u%% of period)\n",
+           (unsigned)tim1_arr, (unsigned)ccr4,
+           (unsigned)(100U * ccr4 / tim1_arr));
 }
 
 /* ---------------------------------------------------------------------------
  * _configure_adc_injected
  *
- * Routes ADC1 injected channels to TIM1_TRGO (which now carries OC4REF).
- * Channel layout:
- *   JSQ3 (1st conversion) → CH0 / PA0 → phase W  → JDR1
- *   JSQ4 (2nd conversion) → CH1 / PA1 → phase UV → JDR2
- *   JEXTSEL = 0b0001 = TIM1_TRGO  (STM32F411 RM0383 Table 77)
+ * Routes ADC1 injected channels to TIM1_TRGO (which carries OC4REF falling
+ * edge ≈ 97% into the PWM period — all low-side FETs guaranteed ON).
+ *
+ * Injected sequence (JL = 01 → 2 conversions):
+ *   JSQ3 = CH0 / PA0 → phase W  (Ic) → JDR1   (1st conversion)
+ *   JSQ4 = CH1 / PA1 → phase UV (Ia) → JDR2   (2nd conversion)
+ *
+ * Trigger:
+ *   JEXTSEL = 0001 = TIM1_TRGO  (STM32F411 RM0383 Table 77)
+ *   JEXTEN  = 10   = falling edge of OC4REF
+ *
+ * Both channels are sampled in a single hardware-triggered burst with no CPU
+ * involvement.  Results are read from JDR1/JDR2 after JEOC flag is set.
+ * This replaces the previous two sequential Zephyr adc_read() calls which
+ * caused offset_ia ≈ 2.84 V (Ia was read one period late — high-side ON).
  * ------------------------------------------------------------------------- */
 static void _configure_adc_injected(void)
 {
@@ -173,9 +199,49 @@ static void _configure_adc_injected(void)
         printk("[CS] ERROR: ADC device not ready!\n");
         return;
     }
+    /* Let Zephyr configure the GPIO pin-mux and sample times (SMPR) only. */
     adc_channel_setup(adc_dev, &ch0_cfg);
     adc_channel_setup(adc_dev, &ch1_cfg);
-    printk("[CS] ADC ready (CH0=PA0/Ic, CH1=PA1/Ia, Zephyr adc_read)\n");
+
+    /*
+     * Injected sequence register (JSQR):
+     *   bits [21:20] JL   = 01   → 2 conversions (JSQ3 then JSQ4)
+     *   bits [14:10] JSQ3 =  0   → CH0 = Ic (PA0) → result in JDR1
+     *   bits [19:15] JSQ4 =  1   → CH1 = Ia (PA1) → result in JDR2
+     */
+    ADC1->JSQR = (1U << 20)   /* JL = 0b01 → 2 conversions */
+               | (0U << 10)   /* JSQ3 = CH0 = Ic (PA0) → JDR1 */
+               | (1U << 15);  /* JSQ4 = CH1 = Ia (PA1) → JDR2 */
+
+    /*
+     * CR2: configure external trigger for injected group.
+     *   JEXTSEL [19:16] = 0001  → TIM1_TRGO
+     *   JEXTEN  [21:20] = 10    → falling edge  (OC4REF falls at CNT = CCR4)
+     * Clear any stale JEOC before activating the trigger.
+     */
+    /* SCAN=1 required for injected multi-channel sequence (JL=01 → 2 conversions) */
+    ADC1->CR1 |= ADC_CR1_SCAN;
+
+    /* Ensure ADC is powered on — Zephyr adc_channel_setup() configures pin-mux
+     * and SMPR only; it does NOT call adc_read(), so ADON may still be 0.
+     * Without ADON=1 the injected hardware trigger never fires (JEOC stays 0). */
+    if (!(ADC1->CR2 & ADC_CR2_ADON)) {
+        ADC1->CR2 |= ADC_CR2_ADON;
+        /* tSTAB: negligible on STM32F4 but spin a moment to be safe */
+        for (volatile int _i = 0; _i < 1000; _i++) {}
+    }
+
+    /* Hardware trigger: TIM1_TRGO falling edge (OC4REF via MMS=0b111 → TRGO).
+     * JEXTSEL[3:0] = 0001 = TIM1_TRGO  (STM32F411 RM0383 Table 77)
+     * JEXTEN[1:0]  = 10   = falling edge (OC4REF falls when CNT reaches CCR4) */
+    ADC1->CR2 = (ADC1->CR2 & ~(ADC_CR2_JEXTSEL_Msk | ADC_CR2_JEXTEN_Msk))
+              | (1U << ADC_CR2_JEXTSEL_Pos)   /* JEXTSEL = 0001 = TIM1_TRGO */
+              | (2U << ADC_CR2_JEXTEN_Pos);   /* JEXTEN  = 10   = falling edge */
+
+    ADC1->SR &= ~ADC_SR_JEOC;   /* clear any stale flag */
+
+    printk("[CS] ADC1 injected: CH0\u2192JDR1(Ic) CH1\u2192JDR2(Ia), "
+           "trigger=TIM1_TRGO falling edge @ CCR4=75%% period\n");
 }
 
 /* ---------------------------------------------------------------------------
@@ -193,37 +259,27 @@ int low_side_cs_init(low_side_cs_t *cs)
 }
 
 /* ---------------------------------------------------------------------------
- * Zephyr adc_read() sequences — one per channel to avoid DR overrun.
- * STM32F4 has a single shared DR register; reading 2 channels in one
- * sequence without DMA causes OVR (CH1 overwrites CH0 before ISR reads it).
- * Two separate single-channel reads avoids this entirely.
+ * _wait_jeoc — wait for hardware-triggered injected conversion to complete,
+ * then read both results.  Replaces the old Zephyr adc_read() path.
+ *
+ * Blocks until JEOC is set (max ~2 PWM periods = 80 µs at 25 kHz) or until
+ * the timeout counter expires (~100 000 iterations ≈ a few ms at 100 MHz).
+ * Returns false only on timeout (ADC or TIM1 not running).
+ *
+ * JDR1 = Ic (CH0 / PA0 / phase W)
+ * JDR2 = Ia (CH1 / PA1 / phase UV)
  * ------------------------------------------------------------------------- */
-static int16_t s_buf_ic;   /* CH0 / PA0 / phase W  (Ic) */
-static int16_t s_buf_ia;   /* CH1 / PA1 / phase UV (Ia) */
-
-static struct adc_sequence s_seq_ic = {
-    .channels    = BIT(0),
-    .buffer      = &s_buf_ic,
-    .buffer_size = sizeof(s_buf_ic),
-    .resolution  = 12,
-};
-static struct adc_sequence s_seq_ia = {
-    .channels    = BIT(1),
-    .buffer      = &s_buf_ia,
-    .buffer_size = sizeof(s_buf_ia),
-    .resolution  = 12,
-};
-
-/* ---------------------------------------------------------------------------
- * _read_adc_raw — read both shunt channels (sequential single-channel reads).
- * Returns true on success.
- * ------------------------------------------------------------------------- */
-static bool _read_adc_raw(uint16_t *raw_ic, uint16_t *raw_ia)
+static bool _wait_jeoc(uint16_t *raw_ic, uint16_t *raw_ia)
 {
-    if (adc_read(adc_dev, &s_seq_ic) != 0) return false;
-    if (adc_read(adc_dev, &s_seq_ia) != 0) return false;
-    *raw_ic = (uint16_t)s_buf_ic;   /* PA0 = phase W  (Ic) */
-    *raw_ia = (uint16_t)s_buf_ia;   /* PA1 = phase UV (Ia) */
+    /* Hardware fires injected conversion at CNT=CCR4 (75% of period) every
+     * 40 µs.  JEOC is set ~2.5 µs after trigger.  Simply poll until set.
+     * Timeout ≈ 100 000 iterations >> 2 full periods (safe for calibration). */
+    uint32_t timeout = 100000U;
+    while (!(ADC1->SR & ADC_SR_JEOC) && --timeout);
+    if (!timeout) return false;
+    ADC1->SR &= ~ADC_SR_JEOC;
+    *raw_ic = (uint16_t)(ADC1->JDR1 & 0xFFFU);   /* Ic — 1st conv (JSQ3=CH0) */
+    *raw_ia = (uint16_t)(ADC1->JDR2 & 0xFFFU);   /* Ia — 2nd conv (JSQ4=CH1) */
     return true;
 }
 
@@ -252,17 +308,17 @@ void low_side_cs_calibrate_offsets(low_side_cs_t *cs)
     printk("[CS] Calibrating zero-current offsets (%d samples)...\n",
            ADC_CALIBRATION_ROUNDS);
 
-    /* Diagnostic: first 3 raw samples to verify ADC is actually reading */
+    /* Diagnostic: first 3 hardware-triggered samples to verify ADC firing */
     for (int d = 0; d < 3; d++) {
         uint16_t r_ic, r_ia;
-        bool ok = _read_adc_raw(&r_ic, &r_ia);
+        bool ok = _wait_jeoc(&r_ic, &r_ia);
         printk("[CS] diag[%d]: ok=%d CH0(Ic)=%u CH1(Ia)=%u\n",
                d, (int)ok, (unsigned)r_ic, (unsigned)r_ia);
     }
 
     for (int i = 0; i < ADC_CALIBRATION_ROUNDS; i++) {
         uint16_t raw_ic, raw_ia;
-        if (!_read_adc_raw(&raw_ic, &raw_ia)) continue;
+        if (!_wait_jeoc(&raw_ic, &raw_ia)) continue;
 
         sum_ic += _raw_to_volts(raw_ic, cs->vref, cs->adc_full_scale);
         sum_ia += _raw_to_volts(raw_ia, cs->vref, cs->adc_full_scale);
@@ -293,27 +349,27 @@ phase_current_t low_side_cs_get_phase_currents(low_side_cs_t *cs)
 {
     if (!cs || !cs->initialized) return s_last_current;
 
-    /* --- Synchronize to the low-side-on sampling window -------------------
-     * TIM1 (edge-aligned up-counter, 25 kHz) drives the 3 low-side FETs via
-     * CH1/CH2/CH3 in PWM mode 1.  All three low-sides are ON simultaneously
-     * during the interval CNT ∈ [0, min(CCR1,CCR2,CCR3)].
+    /* --- Hardware-triggered injected ADC (non-blocking) -------------------
+     * TIM1_TRGO (OC4REF falling edge at CNT = CCR4 ≈ 97% of period) fires
+     * the ADC injected sequence automatically every PWM period.  Results land
+     * in JDR1 (Ic) and JDR2 (Ia) with JEOC flag set on completion.
      *
-     * At the maximum haptic duty (0.32 A × 5.6 Ω = 1.79 V on a 4.2 V bus),
-     * max high-side duty ≈ 43 %, so the simultaneous ON window is ≥ 57 % of
-     * the 40 µs period ≈ 23 µs = 2300 TIM1 counts.
-     *
-     * Strategy: spin until CNT < 200 (2 µs from period start), then do both
-     * adc_read() calls (~2 µs each).  Both reads finish at CNT ≈ 600, well
-     * inside the 2300-count window.  Worst-case spin = one PWM period = 40 µs.
+     * Non-blocking: if JEOC is not set yet, return the cached value from the
+     * previous period.  The FOC loop calls this once per ~40 µs period, so
+     * JEOC will almost always be fresh.
      * ---------------------------------------------------------------------- */
-    uint32_t cnt;
-    do { cnt = TIM1->CNT; } while (cnt > 200U);
+    /* --- Hardware-triggered injected ADC (non-blocking) -------------------
+     * TIM1_TRGO fires ADC injected sequence at CNT=CCR4 (75% period, ~30 µs
+     * into each 40 µs PWM period).  JEOC is set ~2.5 µs later.
+     * FOC loop runs at 1 kHz (1 ms) >> PWM period (40 µs): JEOC is always
+     * fresh by the time we arrive here.  Non-blocking: return cached value
+     * only if, somehow, we arrive before the first trigger fires.
+     * ---------------------------------------------------------------------- */
+    if (!(ADC1->SR & ADC_SR_JEOC)) return s_last_current;
+    ADC1->SR &= ~ADC_SR_JEOC;
 
-    if (adc_read(adc_dev, &s_seq_ic) != 0) return s_last_current;
-    if (adc_read(adc_dev, &s_seq_ia) != 0) return s_last_current;
-
-    uint16_t raw_ic = (uint16_t)s_buf_ic;   /* Ic = phase W  */
-    uint16_t raw_ia = (uint16_t)s_buf_ia;   /* Ia = phase UV */
+    uint16_t raw_ic = (uint16_t)(ADC1->JDR1 & 0xFFFU);   /* CH0 / Ic / PA0 */
+    uint16_t raw_ia = (uint16_t)(ADC1->JDR2 & 0xFFFU);   /* CH1 / Ia / PA1 */
 
     cs->last_raw_ic = (int16_t)raw_ic;
     cs->last_raw_ia = (int16_t)raw_ia;
@@ -349,9 +405,9 @@ int low_side_cs_driver_align(low_side_cs_t *cs, float test_voltage)
     if (cs->skip_align) return 1;
     if (!cs->initialized) return 0;
 
-    /* Read a fresh sample pair */
+    /* Read a fresh hardware-triggered sample pair */
     uint16_t raw_ic, raw_ia;
-    if (!_read_adc_raw(&raw_ic, &raw_ia)) return 0;   /* timeout */
+    if (!_wait_jeoc(&raw_ic, &raw_ia)) return 0;   /* timeout */
 
     float Ic = (_raw_to_volts(raw_ic, cs->vref, cs->adc_full_scale) - cs->offset_ic) * cs->gain_c;
     float Ia = (_raw_to_volts(raw_ia, cs->vref, cs->adc_full_scale) - cs->offset_ia) * cs->gain_a;
