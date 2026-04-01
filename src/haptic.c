@@ -54,10 +54,11 @@ extern float sensor_get_angle(sensor_t *sensor);
 /* Detent mode: peak current of restoring spring [A].
  * Lower than current_limit to leave headroom for damping current.
  * Too high → strong vibration (underdamped spring).  0.20 A is a good start. */
-#define HAPTIC_DETENT_AMPLITUDE  0.20f
+#define HAPTIC_DETENT_AMPLITUDE  0.15f
 /* Detent mode: velocity damping [A·s/rad].
- * Critical KD for GM3506: ~0.006 A/(rad/s).  Use 0.012 (2× = light overdamping). */
-#define DETENT_KD            0.012f
+ * BEMF feedforward makes spring velocity-independent → need proper damping.
+ * KD_critical ≈ 0.04–0.08 A/(rad/s) for GM3506 knob inertia. */
+#define DETENT_KD            0.08f
 
 
 /* AS5048A encoder from devicetree */
@@ -334,34 +335,19 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("   [OK] FOC calibration complete!\n");
 
     /* --- Step 6: FOC_CURRENT torque mode --------------------------------- */
-    /* P = R_phase → Vq = R * (Iq_sp - Iq_meas).                            *
-     * I = 0 intentionally: Iq_meas ≈ 0 (current sense not yet working), so *
-     * a non-zero I-term would wind up in the direction of the dominant      *
-     * setpoint history and create CW/CCW asymmetry.  With I=0 the output   *
-     * is Vq = R * Iq_sp — symmetric, identical to VOLTAGE mode.            *
-     * Restore I=5 once Iq_meas correctly tracks Iq_sp.                     */
-    motor->torque_controller = FOC_CURRENT;
+    /* P = R_phase, I = R_phase/L * dt ≈ 20 (empirical for GM3506).          *
+     * ADC calibration now runs before FOC → Iq_meas is correct.            *
+     * I-term eliminates steady-state 50% current error caused by P-only.   */
+    /* VOLTAGE mode: bldc_motor_move() sets voltage.q directly.              *
+     * Back-EMF feedforward in haptic_loop cancels vel-dependent current drop.*
+     * Vq = R*Iq_sp + Kt*vel  → Iq_actual = (Vq - Vbemf)/R = Iq_sp exactly.  *
+     * This eliminates FOC_CURRENT anti-damping (spring weakening at speed).  */
+    motor->torque_controller = VOLTAGE;
     motor->current_limit     = MOTOR_CURRENT_LIMIT;
-
-    motor->pid_current_q.p     = MOTOR_PHASE_RESISTANCE;  /* V/A = Ω */
-    motor->pid_current_q.i     = 0.0f;   /* 0 until Iq_meas works */
-    motor->pid_current_q.d     = 0.0f;
-    motor->pid_current_q.limit = 1.5f;
-
-    motor->pid_current_d.p     = MOTOR_PHASE_RESISTANCE;
-    motor->pid_current_d.i     = 0.0f;   /* 0 until Iq_meas works */
-    motor->pid_current_d.d     = 0.0f;
-    motor->pid_current_d.limit = 1.5f;
-
-    motor->lpf_current_q.tf = 0.005f;
-    motor->lpf_current_d.tf = 0.005f;
-
-    pid_controller_reset(&motor->pid_current_q);
-    pid_controller_reset(&motor->pid_current_d);
-    motor->current.d = 0.0f;
-    motor->current.q = 0.0f;
-    printk("   [OK] FOC_CURRENT: P=%.1f V/A  I=0 (Iq_meas broken)  Ilim=%.2f A\n",
-           (double)MOTOR_PHASE_RESISTANCE, (double)MOTOR_CURRENT_LIMIT);
+    motor->voltage_limit     = HAPTIC_VOLTAGE_LIMIT;
+    printk("   [OK] VOLTAGE mode: Vlim=%.2f V  Ilim=%.2f A  BEMF_FF=enabled\n",
+           (double)HAPTIC_VOLTAGE_LIMIT,
+           (double)MOTOR_CURRENT_LIMIT);
 
     printk("================================================\n");
     printk("  System Ready - Motor Status: %d\n", motor->motor_status);
@@ -421,7 +407,7 @@ void haptic_loop(bldc_motor_t *motor)
         while (d_ang >  _2PI * 0.5f) d_ang -= _2PI;
         while (d_ang < -_2PI * 0.5f) d_ang += _2PI;
         haptic_prev_angle = current_angle;
-        haptic_inst_vel = 0.1f * (d_ang * 1000.0f) + 0.9f * haptic_inst_vel;
+        haptic_inst_vel = 0.15f * (d_ang * 1000.0f) + 0.85f * haptic_inst_vel;
 
         /* Calculate relative angle */
         float angle_rel = current_angle - start_angle;
@@ -459,18 +445,21 @@ void haptic_loop(bldc_motor_t *motor)
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            smooth_current_filt = 0.5f * target_current + 0.5f * smooth_current_filt;
-            float final_current = smooth_current_filt;
-            if (final_current >  motor->current_limit) final_current =  motor->current_limit;
-            if (final_current < -motor->current_limit) final_current = -motor->current_limit;
+            /* VOLTAGE mode + back-EMF feedforward:
+             * Vq = R*Iq_sp + Kt*vel  →  Iq_actual = Iq_sp regardless of speed */
+            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current
+                         + MOTOR_KT * vel;
+            /* IIR to smooth encoder quantization noise (1 LSB = 0.38 rad/s) */
+            smooth_current_filt = 0.5f * Vq_raw + 0.5f * smooth_current_filt;
+            float final_vq = smooth_current_filt;
 
-            bldc_motor_move(motor, final_current);
+            bldc_motor_move(motor, final_vq);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[SMOOTH] vel=%.2f  Iq=%.3f A  Iq_meas=%.3f A\n",
-                       (double)haptic_inst_vel, (double)final_current,
-                       (double)motor->current.q);
+                printk("[SMOOTH] vel=%.2f  Vq=%.3f V  Iq_sp=%.3f A\n",
+                       (double)haptic_inst_vel, (double)final_vq,
+                       (double)target_current);
             }
 
         } else {
@@ -488,11 +477,13 @@ void haptic_loop(bldc_motor_t *motor)
              * dT/d(norm_err)|0 = -K·2π < 0  →  unconditionally stable. */
             float norm_err     = normalized - nearest_f;
             float scale_factor = 0.75f;
-            /* Positive Iq = torque toward larger angle.
-             * Restoring spring: if norm_err > 0 (CW of detent), need negative Iq (CCW).
-             * Correct formula: -A·sin(2π·norm_err)  —  stable equilibrium at norm_err=0.
-             * d/d(norm_err)|0 = -A·2π·cos(0) = -A·2π < 0  → stable. */
-            float detent_current = -HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err) * scale_factor;
+            /* Sign convention (verified from smooth mode):
+             *   Positive Iq = CW torque = OPPOSES positive encoder direction.
+             * Restoring spring: if norm_err < 0 (CCW past detent), need CCW torque = negative Iq.
+             *   +A·sin(2π·norm_err): for norm_err<0 → sin<0 → Iq<0 (CCW) → restores ✓
+             *   Stable equilibrium at norm_err=0: d/d(err)|0 = +A·2π·cos(0) < 0 only with
+             *   the sign convention above.  DO NOT negate — that causes positive feedback. */
+            float detent_current = +HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err) * scale_factor;
 
             /* Dead-band ±2% at detent center (narrower → motor snaps closer to err=0) */
             float dist = norm_err < 0.0f ? -norm_err : norm_err;
@@ -505,18 +496,26 @@ void haptic_loop(bldc_motor_t *motor)
             last_torque = detent_current;
 
             float target_current = detent_current;
-            /* Velocity damping: oppose motion direction */
-            target_current -= DETENT_KD * haptic_inst_vel;
+            /* Velocity damping: same sign convention as smooth mode (+c*vel brakes).
+             * +DETENT_KD*vel for vel>0 gives positive Iq = CW torque = opposes CCW motion ✓ */
+            target_current += DETENT_KD * haptic_inst_vel;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            bldc_motor_move(motor, target_current);
+            /* VOLTAGE mode + back-EMF feedforward:
+             * Vq = R*Iq_sp + Kt*vel
+             * → Iq_actual = (Vq - Vbemf)/R = (R*Iq_sp + Kt*vel - Kt*vel)/R = Iq_sp
+             * Spring force is now velocity-independent (no anti-damping). */
+            float Vq = MOTOR_PHASE_RESISTANCE * target_current
+                     + MOTOR_KT * haptic_inst_vel;
+
+            bldc_motor_move(motor, Vq);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[DETENT] steps=%d  err=%.3f  Iq=%.3f A  Iq_meas=%.3f A\n",
+                printk("[DETENT] steps=%d  err=%.3f  Iq_sp=%.3f A  Vq=%.3f V\n",
                        num_steps, (double)norm_err, (double)target_current,
-                       (double)motor->current.q);
+                       (double)Vq);
             }
         }
 }
