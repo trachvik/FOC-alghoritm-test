@@ -50,15 +50,17 @@ extern float sensor_get_angle(sensor_t *sensor);
 #define HAPTIC_TORQUE_LIMIT  0.025f  /* N·m — i_q ≈ 0.32 A, v rozahu ±0.458 A */
 #define MOTOR_CURRENT_LIMIT  0.4f    /* A   — s rezervou pod max ±0.458 A */
 /* Smooth mode: dampovaci koeficient [A·s/rad]. */
-#define SMOOTH_KD            0.006f
+#define SMOOTH_KD            0.0025f
 /* Detent mode: peak current of restoring spring [A].
  * Lower than current_limit to leave headroom for damping current.
  * Too high → strong vibration (underdamped spring).  0.20 A is a good start. */
-#define HAPTIC_DETENT_AMPLITUDE  0.15f
+#define HAPTIC_DETENT_AMPLITUDE  0.20f
 /* Detent mode: velocity damping [A·s/rad].
- * BEMF feedforward makes spring velocity-independent → need proper damping.
- * KD_critical ≈ 0.04–0.08 A/(rad/s) for GM3506 knob inertia. */
-#define DETENT_KD            0.08f
+ * Must be << HAPTIC_DETENT_AMPLITUDE / (max_velocity).
+ * At max_velocity=3 rad/s: headroom = 0.30/3=0.10 → KD < 0.05.
+ * Critical damping: KD_crit ≈ 0.015 A/(rad/s) for GM3506 knob inertia.
+ * KD > KD_crit → overdamped (no snap), KD >> → spring fully masked → motor floats. */
+#define DETENT_KD            0.012f
 
 
 /* AS5048A encoder from devicetree */
@@ -144,6 +146,7 @@ static int step_count = 0;
 static float haptic_prev_angle = -1.0f;   /* pro výpočet inst_vel v haptic_loop */
 static float haptic_inst_vel   =  0.0f;   /* vypočítaná rychlost [rad/s], LPF α=0.2 */
 static float smooth_current_filt = 0.0f;  /* IIR filtr výstupního proudu smooth mode */
+static float detent_vq_filt      = 0.0f;  /* IIR filtr výstupního napětí detent mode */
 /* FOC control loop thread - triggered by k_timer at 10 kHz */
 static bldc_motor_t *g_motor_ptr = NULL;
 static K_SEM_DEFINE(haptic_sem, 0, 1);
@@ -407,17 +410,21 @@ void haptic_loop(bldc_motor_t *motor)
         while (d_ang >  _2PI * 0.5f) d_ang -= _2PI;
         while (d_ang < -_2PI * 0.5f) d_ang += _2PI;
         haptic_prev_angle = current_angle;
-        haptic_inst_vel = 0.15f * (d_ang * 1000.0f) + 0.85f * haptic_inst_vel;
+        /* α=0.1: more smoothing than 0.25 to suppress 1-LSB encoder quantisation noise
+         * (~0.38 rad/s per tick). Effective bandwidth ≈ 16 Hz — enough for haptic. */
+        haptic_inst_vel = 0.1f * (d_ang * 1000.0f) + 0.9f * haptic_inst_vel;
 
         /* Calculate relative angle */
         float angle_rel = current_angle - start_angle;
 
-        // Preserve position when num_steps is changed
+        // Preserve position when num_steps is changed; reset IIR filters on transition
         if (num_steps != num_steps_old) {
             step_count_buffer = step_count;
             start_angle = current_angle;
             num_steps_old = num_steps;
             angle_rel = 0.0f;
+            smooth_current_filt = 0.0f;
+            detent_vq_filt      = 0.0f;
         }
 
         /* Normalize angle to [0, 2π] */
@@ -445,12 +452,9 @@ void haptic_loop(bldc_motor_t *motor)
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            /* VOLTAGE mode + back-EMF feedforward:
-             * Vq = R*Iq_sp + Kt*vel  →  Iq_actual = Iq_sp regardless of speed */
-            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current
-                         + MOTOR_KT * vel;
-            /* IIR to smooth encoder quantization noise (1 LSB = 0.38 rad/s) */
-            smooth_current_filt = 0.5f * Vq_raw + 0.5f * smooth_current_filt;
+            /* Vq = R*Iq_sp (voltage mode, no BEMF FF — avoids noisy vel amplification) */
+            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current;
+            smooth_current_filt = 0.8f * Vq_raw + 0.2f * smooth_current_filt;
             float final_vq = smooth_current_filt;
 
             bldc_motor_move(motor, final_vq);
@@ -475,47 +479,31 @@ void haptic_loop(bldc_motor_t *motor)
             /* Error from nearest detent center, ∈ (-0.5, 0.5).
              * Single stable equilibrium at norm_err=0.
              * dT/d(norm_err)|0 = -K·2π < 0  →  unconditionally stable. */
-            float norm_err     = normalized - nearest_f;
-            float scale_factor = 0.75f;
-            /* Sign convention (verified from smooth mode):
-             *   Positive Iq = CW torque = OPPOSES positive encoder direction.
-             * Restoring spring: if norm_err < 0 (CCW past detent), need CCW torque = negative Iq.
-             *   +A·sin(2π·norm_err): for norm_err<0 → sin<0 → Iq<0 (CCW) → restores ✓
-             *   Stable equilibrium at norm_err=0: d/d(err)|0 = +A·2π·cos(0) < 0 only with
-             *   the sign convention above.  DO NOT negate — that causes positive feedback. */
-            float detent_current = +HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err) * scale_factor;
+            /* Error from nearest detent center, ∈ (-0.5, 0.5).
+             * Stable at norm_err=0: restoring spring +A·sin(2π·err).
+             * No dead-band — spring must act at all displacements for a snap feel. */
+            float norm_err = normalized - nearest_f;
 
-            /* Dead-band ±2% at detent center (narrower → motor snaps closer to err=0) */
-            float dist = norm_err < 0.0f ? -norm_err : norm_err;
-            if (dist < 0.02f) {
-                detent_current = 0.0f;
-            } else if (dist < 0.10f) {
-                float s = (dist - 0.02f) / 0.08f;
-                detent_current *= s;
-            }
+            float detent_current = HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err);
             last_torque = detent_current;
 
-            float target_current = detent_current;
-            /* Velocity damping: same sign convention as smooth mode (+c*vel brakes).
-             * +DETENT_KD*vel for vel>0 gives positive Iq = CW torque = opposes CCW motion ✓ */
-            target_current += DETENT_KD * haptic_inst_vel;
+            /* Velocity damping: same sign as smooth mode */
+            float target_current = detent_current + DETENT_KD * haptic_inst_vel;
             if (target_current >  motor->current_limit) target_current =  motor->current_limit;
             if (target_current < -motor->current_limit) target_current = -motor->current_limit;
 
-            /* VOLTAGE mode + back-EMF feedforward:
-             * Vq = R*Iq_sp + Kt*vel
-             * → Iq_actual = (Vq - Vbemf)/R = (R*Iq_sp + Kt*vel - Kt*vel)/R = Iq_sp
-             * Spring force is now velocity-independent (no anti-damping). */
-            float Vq = MOTOR_PHASE_RESISTANCE * target_current
-                     + MOTOR_KT * haptic_inst_vel;
+            /* Vq = R*Iq_sp (no BEMF FF — noisy vel causes more harm than good) */
+            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current;
+            /* Light IIR α=0.7 to smooth encoder quantisation steps */
+            detent_vq_filt = 0.7f * Vq_raw + 0.3f * detent_vq_filt;
 
-            bldc_motor_move(motor, Vq);
+            bldc_motor_move(motor, detent_vq_filt);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
                 printk("[DETENT] steps=%d  err=%.3f  Iq_sp=%.3f A  Vq=%.3f V\n",
                        num_steps, (double)norm_err, (double)target_current,
-                       (double)Vq);
+                       (double)detent_vq_filt);
             }
         }
 }
