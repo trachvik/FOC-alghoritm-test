@@ -4,6 +4,7 @@
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/pwm.h>
 #include <zephyr/sys/printk.h>
+#include <stm32f4xx.h>
 
 /* Helper macros */
 #define _ISSET(x) ((x) != NOT_SET)
@@ -69,93 +70,144 @@ static void* _configure6PWM(long pwm_frequency, float dead_zone,
     printk("PWM configured: freq=%ld Hz, period=%u ns\n", 
            pwm_frequency, pwm_config.period_ns);
     
-    /* Initialize all channels to 0% duty cycle */
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 1, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 2, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 3, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 2, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 3, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 4, PWM_POLARITY_NORMAL}, 
-               pwm_config.period_ns, 0);
-    
+    /* Initialize all channels to 0% duty cycle.
+     * Zephyr pwm_set_dt() also sets ARR = period_ns × f_CLK / 1e9 - 1.
+     * At 96 MHz and period_ns=40000: ARR = 3839 for both TIM1 and TIM3. */
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev,  1, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev,  2, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev,  3, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 2, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 3, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+    pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 4, PWM_POLARITY_NORMAL}, pwm_config.period_ns, 0);
+
+    /* -----------------------------------------------------------------------
+     * Post-init hardware configuration (bypasses Zephyr PWM API).
+     *
+     * PROBLEM with naive two-timer design:
+     *   TIM3 (high-side) and TIM1 (low-side) in edge-aligned PWM mode 1,
+     *   both with CCR starting from 0, produce OVERLAPPING on-windows:
+     *   high-side ON for [0 → dc×ARR] and low-side originally ON for
+     *   [0 → (1-dc)×ARR] → shoot-through from 0 to min(dc, 1-dc)×ARR.
+     *
+     * FIX — three-part:
+     *
+     * 1. Invert TIM1 CH1/CH2/CH3 output polarity (CCER[CC1P/CC2P/CC3P]=1).
+     *    With PWM mode 1 and active-low polarity:
+     *      CH1 HIGH (gate open = FET ON) when CNT ≥ CCR1.
+     *    We set CCR1 = (dc + dead_zone) × ARR, so the low-side turns ON only
+     *    AFTER the high-side has turned OFF plus the dead-time gap:
+     *      [0 → dc×ARR]         high-side ON
+     *      [dc×ARR → (dc+dt)×ARR]  BOTH OFF (dead zone = dt)
+     *      [(dc+dt)×ARR → ARR]   low-side ON  ← ADC samples here (97% of ARR)
+     *
+     * 2. Set TIM1 as MASTER (MMS=010 = Update event → TRGO on each overflow).
+     *    The ADC is triggered via TIM1_CC4 (JEXTSEL=0000), NOT via TRGO, so
+     *    TRGO is free for timer synchronisation.
+     *
+     * 3. Set TIM3 as SLAVE (SMS=100=Reset, TS=000=ITR0=TIM1_TRGO).
+     *    TIM3 counter resets to 0 on every TIM1 update pulse, keeping both
+     *    timers phase-locked despite Zephyr initialising them separately.
+     * ----------------------------------------------------------------------- */
+
+    /* 1. Invert TIM1 CH1/2/3 output polarity → low-side ON in tail of period */
+    TIM1->CCER = (TIM1->CCER
+                  & ~(TIM_CCER_CC1P | TIM_CCER_CC2P | TIM_CCER_CC3P))
+               | TIM_CCER_CC1P | TIM_CCER_CC2P | TIM_CCER_CC3P;
+
+    /* 2. TIM1 master: TRGO = Update event (fires on every ARR overflow) */
+    TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
+              | (0b010U << TIM_CR2_MMS_Pos);   /* MMS=010 → Update → TRGO */
+
+    /* 3. TIM3 slave: reset counter on TIM1_TRGO (ITR0 for TIM3) */
+    TIM3->SMCR = (TIM3->SMCR
+                  & ~(TIM_SMCR_SMS_Msk | TIM_SMCR_TS_Msk))
+               | (0b100U << TIM_SMCR_SMS_Pos)   /* SMS=100 = Reset slave mode */
+               | (0b000U << TIM_SMCR_TS_Pos);   /* TS=000  = ITR0 = TIM1_TRGO */
+
+    printk("[6PWM] TIM1 ARR=%u (polarity inverted, master)  "
+           "TIM3 ARR=%u (edge-aligned, slave)\n",
+           (unsigned)TIM1->ARR, (unsigned)TIM3->ARR);
+
     return &pwm_config;
 }
 
 /**
- * Write duty cycle to 6PWM hardware
+ * Write duty cycle to 6PWM hardware — direct register access.
+ *
+ * After low_side_cs_init() switches TIM1 to center-aligned (ARR=2000),
+ * the Zephyr pwm_set_dt() path would overwrite ARR back to 3999 on every
+ * call (it recalculates ARR from period_ns each time).  We bypass it and
+ * write CCR directly so center-aligned mode + ARR=2000 are preserved.
+ *
+ * Hardware wiring (from app.overlay / schematics):
+ *   Phase A (U):  TIM1_CH1 (PA8)  = low-side,  TIM3_CH2 (PB5)  = high-side
+ *   Phase B (V):  TIM1_CH2 (PA9)  = low-side,  TIM3_CH3 (PB0)  = high-side
+ *   Phase C (W):  TIM1_CH3 (PA10) = low-side,  TIM3_CH4 (PB1)  = high-side
+ *
+ * TIM1 low-side channels: complementary outputs (CH1N/CH2N/CH3N used by TMC6300).
+ * TIM3 high-side channels: standard PWM outputs.
+ *
+ * Both timers are edge-aligned at ARR=3839 (96 MHz / 25 kHz − 1).
+ * TIM3 is phase-locked to TIM1 via slave-reset mode (see _configure6PWM).
+ *
+ * Duty convention:
+ *   TIM3 high-side : CCR3 = dc × ARR             → ON from 0 to dc×period
+ *   TIM1 low-side  : CCR1 = (dc + dt) × ARR       → INVERTED output polarity
+ *                    (TIM1 CCER[CC1P]=1 → HIGH when CNT ≥ CCR1)
+ *                    → ON from (dc+dt)×period to end-of-period
+ *
+ * Dead time is "software" dead time implemented by the duty offset (dt_frac).
+ * Hardware BDTR dead-time is NOT used (TIM3 and TIM1 have no shared output).
+ *
+ * ARR values (read from registers after Zephyr pwm_set_dt init):
+ *   Both TIM1 and TIM3: ARR = 3839  (96 MHz / 25 kHz − 1)
  */
+#define TIM_EA_ARR    3839U    /* edge-aligned 25 kHz @ 96 MHz                */
+#define DEAD_ZONE_FRAC  0.02f  /* 2% = 800 ns dead zone between HS OFF and LS ON */
+
 static void _writeDutyCycle6PWM(float dc_a, float dc_b, float dc_c,
                                 phase_state_t *phase_state, void *params)
 {
-    if (!pwm_config.configured) {
-        return;
-    }
-    
-    /* Convert duty cycle [0.0-1.0] to pulse width in nanoseconds */
-    uint32_t pulse_a = (uint32_t)(dc_a * pwm_config.period_ns);
-    uint32_t pulse_b = (uint32_t)(dc_b * pwm_config.period_ns);
-    uint32_t pulse_c = (uint32_t)(dc_c * pwm_config.period_ns);
-    
-    /* Constrain to valid range */
-    if (pulse_a > pwm_config.period_ns) pulse_a = pwm_config.period_ns;
-    if (pulse_b > pwm_config.period_ns) pulse_b = pwm_config.period_ns;
-    if (pulse_c > pwm_config.period_ns) pulse_c = pwm_config.period_ns;
-    
-    /* Phase A (U) - TIM3_CH2 (high), TIM1_CH1 (low) */
-    if (phase_state[0] == PHASE_ON || phase_state[0] == PHASE_HI) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 2, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pulse_a);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 2, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
-    
-    if (phase_state[0] == PHASE_ON || phase_state[0] == PHASE_LO) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 1, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pwm_config.period_ns - pulse_a);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 1, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
-    
-    /* Phase B (V) - TIM3_CH3 (high), TIM1_CH2 (low) */
-    if (phase_state[1] == PHASE_ON || phase_state[1] == PHASE_HI) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 3, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pulse_b);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 3, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
-    
-    if (phase_state[1] == PHASE_ON || phase_state[1] == PHASE_LO) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 2, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pwm_config.period_ns - pulse_b);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 2, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
-    
-    /* Phase C (W) - TIM3_CH4 (high), TIM1_CH3 (low) */
-    if (phase_state[2] == PHASE_ON || phase_state[2] == PHASE_HI) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 4, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pulse_c);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_high_dev, 4, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
-    
-    if (phase_state[2] == PHASE_ON || phase_state[2] == PHASE_LO) {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 3, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, pwm_config.period_ns - pulse_c);
-    } else {
-        pwm_set_dt(&(struct pwm_dt_spec){pwm_low_dev, 3, PWM_POLARITY_NORMAL},
-                   pwm_config.period_ns, 0);
-    }
+    ARG_UNUSED(params);
+
+    /* Clamp duty to [0, 1] */
+    if (dc_a < 0.0f) dc_a = 0.0f; if (dc_a > 1.0f) dc_a = 1.0f;
+    if (dc_b < 0.0f) dc_b = 0.0f; if (dc_b > 1.0f) dc_b = 1.0f;
+    if (dc_c < 0.0f) dc_c = 0.0f; if (dc_c > 1.0f) dc_c = 1.0f;
+
+    /* TIM3 high-side (edge-aligned, normal polarity):
+     *   CCR3 = dc × ARR  →  CH HIGH for [0, dc×period] */
+    uint32_t ccr3_a = (phase_state[0] == PHASE_ON || phase_state[0] == PHASE_HI)
+                      ? (uint32_t)(dc_a * TIM_EA_ARR) : 0U;
+    uint32_t ccr3_b = (phase_state[1] == PHASE_ON || phase_state[1] == PHASE_HI)
+                      ? (uint32_t)(dc_b * TIM_EA_ARR) : 0U;
+    uint32_t ccr3_c = (phase_state[2] == PHASE_ON || phase_state[2] == PHASE_HI)
+                      ? (uint32_t)(dc_c * TIM_EA_ARR) : 0U;
+
+    /* TIM1 low-side (edge-aligned, INVERTED polarity via CCER[CC1P]=1):
+     *   CCR1 = (dc + dead_zone) × ARR
+     *   With CC1P=1: CH HIGH when CNT ≥ CCR1 → low-side ON for [(dc+dt), 1] of period.
+     *   Natural dead zone = dead_zone × period between HS turn-off and LS turn-on. */
+    uint32_t ccr1_a = (phase_state[0] == PHASE_ON || phase_state[0] == PHASE_LO)
+                      ? (uint32_t)((dc_a + DEAD_ZONE_FRAC) * TIM_EA_ARR) : TIM_EA_ARR;
+    uint32_t ccr1_b = (phase_state[1] == PHASE_ON || phase_state[1] == PHASE_LO)
+                      ? (uint32_t)((dc_b + DEAD_ZONE_FRAC) * TIM_EA_ARR) : TIM_EA_ARR;
+    uint32_t ccr1_c = (phase_state[2] == PHASE_ON || phase_state[2] == PHASE_LO)
+                      ? (uint32_t)((dc_c + DEAD_ZONE_FRAC) * TIM_EA_ARR) : TIM_EA_ARR;
+    /* Clamp to ARR so CCR never exceeds ARR (which would keep low-side always ON) */
+    if (ccr1_a > TIM_EA_ARR) ccr1_a = TIM_EA_ARR;
+    if (ccr1_b > TIM_EA_ARR) ccr1_b = TIM_EA_ARR;
+    if (ccr1_c > TIM_EA_ARR) ccr1_c = TIM_EA_ARR;
+
+    /* Write TIM3 high-side CCRs (CH2=A, CH3=B, CH4=C) */
+    TIM3->CCR2 = ccr3_a;
+    TIM3->CCR3 = ccr3_b;
+    TIM3->CCR4 = ccr3_c;
+
+    /* Write TIM1 low-side CCRs (CH1=A, CH2=B, CH3=C) */
+    TIM1->CCR1 = ccr1_a;
+    TIM1->CCR2 = ccr1_b;
+    TIM1->CCR3 = ccr1_c;
 }
 
 /**

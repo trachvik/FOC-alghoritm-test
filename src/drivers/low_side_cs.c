@@ -112,64 +112,49 @@ void low_side_cs_init_struct(low_side_cs_t *cs,
 }
 
 /* ---------------------------------------------------------------------------
- * _configure_tim1_center_aligned
+ * _configure_tim1_adc_trigger
  *
- * Switches TIM1 from edge-aligned (as set by Zephyr PWM driver) to
- * center-aligned mode 1 and configures:
- *   - ARR for 25 kHz
- *   - Dead-time in BDTR (500 ns)
- *   - CH4 in PWM mode 1 as internal trigger source for ADC
- *   - TRGO routed to OC4REF (MMS = 0b111)  ← NOT used; we use direct CH4
+ * Configures TIM1 CH4 to fire a compare-match event at 97% of the PWM period.
+ * The ADC injected group is triggered by TIM1_CC4 (JEXTSEL=0000), leaving
+ * TIM1 TRGO (MMS=010=Update) free to keep TIM3 phase-locked to TIM1.
+ *
+ * WHY edge-aligned + 97% trigger:
+ *   Both TIM1 (low-side) and TIM3 (high-side) run edge-aligned at ARR=3839.
+ *   TIM1 low-side output is INVERTED (CCER[CC1P]=1): ON when CNT ≥ CCR1.
+ *   CCR1 = (dc + dead_zone_frac) × ARR  (set by _writeDutyCycle6PWM).
+ *   For haptic currents (Iq ≤ 0.4A), dc ranges [0.19, 0.81], CCR1 ≤ 0.83×ARR.
+ *   At 97%×ARR = CCR4 all low-side FETs are ON and high-sides are OFF.
+ *   OC4REF falls at CNT=CCR4 → FALLING edge → fires ADC CC4 event.
+ *
+ * NOTE:
+ *   - DO NOT change TIM1 MMS here; _configure6PWM() already set MMS=010
+ *     (Update → TRGO) for TIM3 slave synchronisation.
+ *   - JEXTSEL=0000 = TIM1_CC4 (compare channel 4 event, NOT TRGO).
  * ------------------------------------------------------------------------- */
-static void _configure_tim1_center_aligned(uint32_t offset_trough_ns)
+static void _configure_tim1_adc_trigger(void)
 {
-    /*
-     * Strategy: do NOT stop TIM1 or reset it via RCC.  Stopping TIM1 while
-     * Zephyr's 6PWM driver owns it causes a hard-fault (Zephyr IRQ handler
-     * sees the timer in an unexpected state).
-     *
-     * CCMR2, CCER, CCR4 and CR2 can all be written safely while the timer
-     * is running (CEN=1).  We only add CH4 as an internal compare output
-     * (no GPIO) to generate OC4REF, which is routed to TRGO via MMS=0b111.
-     * ADC injected trigger: JEXTSEL=0b0001 = TIM1_TRGO.
-     *
-     * TIM1 remains in whichever mode the 6PWM driver left it (edge-aligned,
-     * ARR = f_CLK/f_PWM - 1).  Sampling at CCR4 counts from period start is
-     * valid for low-side current sense as long as CCR4 < min(CCRx) of any
-     * active phase (i.e. within the guaranteed all-low-side-on window).
-     */
-
-    /* Read actual ARR — do NOT change it */
+    /* Read actual ARR set by Zephyr PWM driver (= 3839 for 96 MHz / 25 kHz) */
     uint32_t tim1_arr = TIM1->ARR;
 
-    /*
-     * Place CCR4 at 75% of the PWM period.
-     *
-     * In edge-aligned UP-counting PWM mode 1:
-     *   OC4REF = HIGH while CNT < CCR4   → OC4REF = LOW from CNT = CCR4 to ARR
-     * Falling edge of OC4REF at CNT = CCR4 → TRGO → ADC injected trigger.
-     *
-     * Safe-window requirement: CCR4 > CCR_max + dead_time_counts
-     *   At I_limit=0.4A, Vq ≈ 5.6×0.4 = 2.24V, duty ≈ 44% → CCR_max ≈ 0.44×ARR
-     *   dead_time ≈ 50 counts → safe window starts at ~0.44×ARR + 50 ≈ 45%
-     *   CCR4 = 75% → 30% settling margin before trigger (>>enough).
-     *
-     * ADC completion margin: (ARR - CCR4) / f_CLK > t_ADC_conv (~2.5 µs)
-     *   With CCR4 = 75%×ARR: remaining = 25%×ARR = ~10 µs >> 2.5 µs ✓
-     *
-     * JEXTEN = 0b10 (falling edge) in _configure_adc_injected().
-     */
-    uint32_t ccr4 = (tim1_arr >= 8U) ? (tim1_arr * 3U / 4U) : (tim1_arr / 2U);
+    /* CCR4 at 97% of period: all low-sides are ON, high-sides are OFF.
+     * Low-side turns ON at (dc+0.02)×ARR ≈ 0.52×ARR = 1997 for dc=0.5.
+     * CCR4 = 3724 >> 1997 → 20% guard margin. */
+    uint32_t ccr4 = (tim1_arr * 97U) / 100U;
 
+    /* CH4: PWM mode 1, internal only (no GPIO pin output, no complementary) */
     TIM1->CCMR2 = (TIM1->CCMR2
                    & ~(TIM_CCMR2_CC4S_Msk | TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE))
                 | (0b110U << TIM_CCMR2_OC4M_Pos);   /* PWM mode 1 */
-    TIM1->CCER &= ~(TIM_CCER_CC4E | TIM_CCER_CC4P | TIM_CCER_CC4NP);  /* no GPIO, active-high */
-    TIM1->CCR4 = ccr4;
-    TIM1->CR2 = (TIM1->CR2 & ~TIM_CR2_MMS_Msk)
-              | (0b111U << TIM_CR2_MMS_Pos);   /* MMS=111 → OC4REF → TRGO */
+    TIM1->CCER &= ~(TIM_CCER_CC4E | TIM_CCER_CC4P | TIM_CCER_CC4NP);  /* internal, active-high */
+    TIM1->CCR4  = ccr4;
+    /* Enable CC4 so the compare event (CC4IF) fires when CNT = CCR4.
+     * CC4E=1 enables the compare unit; the GPIO output remains disconnected
+     * (CC4E controls output pin only when the channel is mapped to a pin). */
+    TIM1->CCER |= TIM_CCER_CC4E;
 
-    printk("[CS] TIM1 ARR=%u CCR4=%u (trigger @ ~%u%% of period)\n",
+    /* Leave TIM1->CR2 (MMS) UNCHANGED — set to 010 (Update→TRGO) by bldc_driver. */
+
+    printk("[CS] TIM1 edge-aligned: ARR=%u CCR4=%u (trigger @ %u%% of period, CC4 event)\n",
            (unsigned)tim1_arr, (unsigned)ccr4,
            (unsigned)(100U * ccr4 / tim1_arr));
 }
@@ -231,17 +216,18 @@ static void _configure_adc_injected(void)
         for (volatile int _i = 0; _i < 1000; _i++) {}
     }
 
-    /* Hardware trigger: TIM1_TRGO falling edge (OC4REF via MMS=0b111 → TRGO).
-     * JEXTSEL[3:0] = 0001 = TIM1_TRGO  (STM32F411 RM0383 Table 77)
-     * JEXTEN[1:0]  = 10   = falling edge (OC4REF falls when CNT reaches CCR4) */
+    /* Hardware trigger: TIM1_CC4 event (compare match at CNT=CCR4=97%×ARR).
+     * JEXTSEL=0000 = TIM1_CC4 (compare channel 4 event, NOT TRGO).
+     *   TRGO (MMS=010=Update) is reserved for TIM3 slave reset synchronisation.
+     * JEXTEN=01 = rising edge of CC4 event pulse (fires at compare match). */
     ADC1->CR2 = (ADC1->CR2 & ~(ADC_CR2_JEXTSEL_Msk | ADC_CR2_JEXTEN_Msk))
-              | (1U << ADC_CR2_JEXTSEL_Pos)   /* JEXTSEL = 0001 = TIM1_TRGO */
-              | (2U << ADC_CR2_JEXTEN_Pos);   /* JEXTEN  = 10   = falling edge */
+              | (0U << ADC_CR2_JEXTSEL_Pos)   /* JEXTSEL = 0000 = TIM1_CC4 */
+              | (1U << ADC_CR2_JEXTEN_Pos);   /* JEXTEN  = 01   = rising edge (CC4 event) */
 
     ADC1->SR &= ~ADC_SR_JEOC;   /* clear any stale flag */
 
     printk("[CS] ADC1 injected: CH0\u2192JDR1(Ic) CH1\u2192JDR2(Ia), "
-           "trigger=TIM1_TRGO falling edge @ CCR4=75%% period\n");
+           "trigger=TIM1_CC4 @ CCR4=97%% period\n");
 }
 
 /* ---------------------------------------------------------------------------
@@ -251,7 +237,7 @@ int low_side_cs_init(low_side_cs_t *cs)
 {
     if (!cs) return 0;
 
-    _configure_tim1_center_aligned(cs->offset_trough_ns);
+    _configure_tim1_adc_trigger();
     _configure_adc_injected();
 
     cs->initialized = true;

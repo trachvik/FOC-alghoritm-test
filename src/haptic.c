@@ -389,11 +389,14 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
         bldc_motor_move(motor, 0.10f);
         bldc_motor_loop_foc(motor);
         if (_t % 20 == 19) {
-            printk("   [CSTEST] t=%dms  Iq_sp=0.100 A  Iq_meas=%.3f A  Id=%.3f A  Vq=%.3f V\n",
+            printk("   [CSTEST] t=%dms  Iq_sp=0.100 A  Iq_meas=%.3f A  Id=%.3f A"
+                   "  Vq=%.3f V  raw_ia=%d raw_ic=%d\n",
                    (_t + 1) * 5,
                    (double)motor->current.q,
                    (double)motor->current.d,
-                   (double)motor->voltage.q);
+                   (double)motor->voltage.q,
+                   (int)g_cs.last_raw_ia,
+                   (int)g_cs.last_raw_ic);
         }
         k_msleep(5);
     }
