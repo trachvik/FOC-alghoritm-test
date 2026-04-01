@@ -62,6 +62,17 @@ extern float sensor_get_angle(sensor_t *sensor);
  * KD > KD_crit → overdamped (no snap), KD >> → spring fully masked → motor floats. */
 #define DETENT_KD            0.012f
 
+/* FOC_CURRENT loop tuning
+ * =========================
+ * P = R_phase = 5.6 – correct DC gain: at standstill Vq = P×err = R×Iq_sp when err=Iq_sp.
+ * I = 50  – corrects BEMF-induced steady-state error at speed (anti-windup via limit).
+ * LIMIT = 4.2 V – applies to both proportional+integral, prevents saturation.
+ * LPF_TF = 1 ms – smooths ADC quantisation noise; bandwidth = 159 Hz at 1 kHz loop. */
+#define FOC_PID_P            MOTOR_PHASE_RESISTANCE   /* 5.6 V/A        */
+#define FOC_PID_I            0.0f                     /* I=0: integrátor zakázán — s šumným Iq_meas způsobuje nestabilitu */
+#define FOC_PID_LIMIT        HAPTIC_VOLTAGE_LIMIT     /* 4.2 V          */
+#define CURRENT_LPF_TF       0.005f                   /* s (= 5 ms, α=0.83 @ 1kHz, f_3dB=32Hz) */
+
 
 /* AS5048A encoder from devicetree */
 #define AS5048A_NODE DT_NODELABEL(as5048a)
@@ -145,8 +156,8 @@ static float last_torque = 0.0f;
 static int step_count = 0;
 static float haptic_prev_angle = -1.0f;   /* pro výpočet inst_vel v haptic_loop */
 static float haptic_inst_vel   =  0.0f;   /* vypočítaná rychlost [rad/s], LPF α=0.2 */
-static float smooth_current_filt = 0.0f;  /* IIR filtr výstupního proudu smooth mode */
-static float detent_vq_filt      = 0.0f;  /* IIR filtr výstupního napětí detent mode */
+static float smooth_iq_filt = 0.0f;  /* IIR pre-filter na proudový setpoint smooth mode */
+static float detent_iq_filt = 0.0f;  /* IIR pre-filter na proudový setpoint detent mode */
 /* FOC control loop thread - triggered by k_timer at 10 kHz */
 static bldc_motor_t *g_motor_ptr = NULL;
 static K_SEM_DEFINE(haptic_sem, 0, 1);
@@ -338,19 +349,68 @@ int haptic_init(bldc_motor_t *motor, bldc_driver_t *driver, sensor_t *encoder)
     printk("   [OK] FOC calibration complete!\n");
 
     /* --- Step 6: FOC_CURRENT torque mode --------------------------------- */
-    /* P = R_phase, I = R_phase/L * dt ≈ 20 (empirical for GM3506).          *
-     * ADC calibration now runs before FOC → Iq_meas is correct.            *
-     * I-term eliminates steady-state 50% current error caused by P-only.   */
-    /* VOLTAGE mode: bldc_motor_move() sets voltage.q directly.              *
-     * Back-EMF feedforward in haptic_loop cancels vel-dependent current drop.*
-     * Vq = R*Iq_sp + Kt*vel  → Iq_actual = (Vq - Vbemf)/R = Iq_sp exactly.  *
-     * This eliminates FOC_CURRENT anti-damping (spring weakening at speed).  */
-    motor->torque_controller = VOLTAGE;
+    /* Gains: P = R_phase so DC gain is correct at standstill.               *
+     *        I = 50 to eliminate BEMF-driven steady-state error at speed.   *
+     * Integral anti-windup: _CONSTRAIN(integral, ±limit) in pid_controller. *
+     * LPF: tf=1ms at 1kHz loop → α=0.5, f_3dB=159 Hz.                      */
+    motor->torque_controller = FOC_CURRENT;
     motor->current_limit     = MOTOR_CURRENT_LIMIT;
     motor->voltage_limit     = HAPTIC_VOLTAGE_LIMIT;
-    printk("   [OK] VOLTAGE mode: Vlim=%.2f V  Ilim=%.2f A  BEMF_FF=enabled\n",
-           (double)HAPTIC_VOLTAGE_LIMIT,
-           (double)MOTOR_CURRENT_LIMIT);
+
+    motor->pid_current_q.p     = FOC_PID_P;
+    motor->pid_current_q.i     = FOC_PID_I;
+    motor->pid_current_q.d     = 0.0f;
+    motor->pid_current_q.limit = FOC_PID_LIMIT;
+
+    /* D-axis PID: DISABLED (Vd = 0 always).
+     * At haptic speeds < 10 rad/s: L*di/dt ≈ 0.1mH*5A/1ms = 0.5V << R*I = 2.24V.
+     * Nonzero Vd is unnecessary and caused saturation + Iq measurement corruption.
+     * With P=I=D=0, pid_controller_operator() returns 0.0 → Vd=0 exactly. */
+    motor->pid_current_d.p     = 0.0f;
+    motor->pid_current_d.i     = 0.0f;
+    motor->pid_current_d.d     = 0.0f;
+    motor->pid_current_d.limit = 0.0f;
+
+    motor->lpf_current_q.tf  = CURRENT_LPF_TF;
+    motor->lpf_current_d.tf  = CURRENT_LPF_TF;
+
+    printk("   [OK] FOC_CURRENT: P=%.1f  I=%.0f  Vlim=%.2f V  Ilim=%.2f A  LPF tf=%.3f s\n",
+           (double)FOC_PID_P, (double)FOC_PID_I,
+           (double)FOC_PID_LIMIT, (double)MOTOR_CURRENT_LIMIT,
+           (double)CURRENT_LPF_TF);
+
+    /* --- Step 7: Current-sense self-test --------------------------------- */
+    /* Command Iq_sp = +0.1 A for 1 s, print Iq_meas every 100 ms.           *
+     * With R=5.6 Ω and P-only: Vq ≈ R*Iq_sp = 0.56 V at steady state.       *
+     * Expected Iq_meas ≈ 0.09–0.10 A.  If near-zero → ADC/Clarke/Park issue. */
+    printk("7. Current-sense self-test (Iq_sp=0.10 A for 1 s)...\n");
+    for (int _t = 0; _t < 200; _t++) {
+        sensor_update(motor->sensor);
+        bldc_motor_move(motor, 0.10f);
+        bldc_motor_loop_foc(motor);
+        if (_t % 20 == 19) {
+            printk("   [CSTEST] t=%dms  Iq_sp=0.100 A  Iq_meas=%.3f A  Id=%.3f A  Vq=%.3f V\n",
+                   (_t + 1) * 5,
+                   (double)motor->current.q,
+                   (double)motor->current.d,
+                   (double)motor->voltage.q);
+        }
+        k_msleep(5);
+    }
+    /* Ramp down to zero */
+    sensor_update(motor->sensor);
+    bldc_motor_move(motor, 0.0f);
+    bldc_motor_loop_foc(motor);
+    k_msleep(100);
+    printk("   [OK] Self-test complete\n");
+
+    /* Reset all current-loop state before entering haptic loop.
+     * Self-test accumulated q-PID integral; if not cleared, Vq starts at ~0.8V
+     * even with Iq_sp=0, causing immediate unintended torque on entry. */
+    pid_controller_reset(&motor->pid_current_q);
+    pid_controller_reset(&motor->pid_current_d);
+    lowpass_filter_init(&motor->lpf_current_q, CURRENT_LPF_TF);
+    lowpass_filter_init(&motor->lpf_current_d, CURRENT_LPF_TF);
 
     printk("================================================\n");
     printk("  System Ready - Motor Status: %d\n", motor->motor_status);
@@ -423,8 +483,8 @@ void haptic_loop(bldc_motor_t *motor)
             start_angle = current_angle;
             num_steps_old = num_steps;
             angle_rel = 0.0f;
-            smooth_current_filt = 0.0f;
-            detent_vq_filt      = 0.0f;
+            smooth_iq_filt = 0.0f;
+            detent_iq_filt = 0.0f;
         }
 
         /* Normalize angle to [0, 2π] */
@@ -444,26 +504,23 @@ void haptic_loop(bldc_motor_t *motor)
             /* ---- Smooth mode: velocity damping ---- */
             float vel = haptic_inst_vel;
 
-            /* Smooth mode: pure velocity damping.
-             * Positive vel = positive sensor angle rate.
-             * Positive Iq creates torque in the direction OPPOSING positive vel
-             * (verified empirically: negative sign accelerates → positive sign brakes). */
-            float target_current = (SMOOTH_KD / MOTOR_KT) * vel;
-            if (target_current >  motor->current_limit) target_current =  motor->current_limit;
-            if (target_current < -motor->current_limit) target_current = -motor->current_limit;
+            /* Smooth mode: velocity damping.
+             * Iq_sp = (KD / Kt) * vel  [A]  — positive vel → +Iq opposes motion (verified).
+             * Passed directly to FOC_CURRENT PID — PID closes the current loop. */
+            float iq_sp = (SMOOTH_KD / MOTOR_KT) * vel;
+            if (iq_sp >  motor->current_limit) iq_sp =  motor->current_limit;
+            if (iq_sp < -motor->current_limit) iq_sp = -motor->current_limit;
 
-            /* Vq = R*Iq_sp (voltage mode, no BEMF FF — avoids noisy vel amplification) */
-            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current;
-            smooth_current_filt = 0.8f * Vq_raw + 0.2f * smooth_current_filt;
-            float final_vq = smooth_current_filt;
+            /* Light IIR on setpoint to suppress 1-LSB encoder quantisation spikes */
+            smooth_iq_filt = 0.8f * iq_sp + 0.2f * smooth_iq_filt;
 
-            bldc_motor_move(motor, final_vq);
+            bldc_motor_move(motor, smooth_iq_filt);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[SMOOTH] vel=%.2f  Vq=%.3f V  Iq_sp=%.3f A\n",
-                       (double)haptic_inst_vel, (double)final_vq,
-                       (double)target_current);
+                printk("[SMOOTH] vel=%.2f  Iq_sp=%.3f A  Iq_meas=%.3f A  Vq=%.3f V\n",
+                       (double)haptic_inst_vel, (double)smooth_iq_filt,
+                       (double)motor->current.q, (double)motor->voltage.q);
             }
 
         } else {
@@ -484,26 +541,24 @@ void haptic_loop(bldc_motor_t *motor)
              * No dead-band — spring must act at all displacements for a snap feel. */
             float norm_err = normalized - nearest_f;
 
-            float detent_current = HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err);
-            last_torque = detent_current;
+            float detent_iq = HAPTIC_DETENT_AMPLITUDE * sinf(_2PI * norm_err);
+            last_torque = detent_iq;
 
-            /* Velocity damping: same sign as smooth mode */
-            float target_current = detent_current + DETENT_KD * haptic_inst_vel;
-            if (target_current >  motor->current_limit) target_current =  motor->current_limit;
-            if (target_current < -motor->current_limit) target_current = -motor->current_limit;
+            /* Velocity damping: same sign as smooth mode (+KD*vel brakes) */
+            float iq_sp = detent_iq + DETENT_KD * haptic_inst_vel;
+            if (iq_sp >  motor->current_limit) iq_sp =  motor->current_limit;
+            if (iq_sp < -motor->current_limit) iq_sp = -motor->current_limit;
 
-            /* Vq = R*Iq_sp (no BEMF FF — noisy vel causes more harm than good) */
-            float Vq_raw = MOTOR_PHASE_RESISTANCE * target_current;
-            /* Light IIR α=0.7 to smooth encoder quantisation steps */
-            detent_vq_filt = 0.7f * Vq_raw + 0.3f * detent_vq_filt;
+            /* Light IIR α=0.7 on current setpoint to suppress encoder noise */
+            detent_iq_filt = 0.7f * iq_sp + 0.3f * detent_iq_filt;
 
-            bldc_motor_move(motor, detent_vq_filt);
+            bldc_motor_move(motor, detent_iq_filt);
             bldc_motor_loop_foc(motor);
 
             if (do_print) {
-                printk("[DETENT] steps=%d  err=%.3f  Iq_sp=%.3f A  Vq=%.3f V\n",
-                       num_steps, (double)norm_err, (double)target_current,
-                       (double)detent_vq_filt);
+                printk("[DETENT] steps=%d  err=%.3f  Iq_sp=%.3f A  Iq_meas=%.3f A  Vq=%.3f V\n",
+                       num_steps, (double)norm_err, (double)detent_iq_filt,
+                       (double)motor->current.q, (double)motor->voltage.q);
             }
         }
 }
